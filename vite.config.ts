@@ -12,4 +12,16 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  nitro: {
+    externals: {
+      external: ["@vercel/nft"],
+    },
+  },
+  vite: {
+    build: {
+      rollupOptions: {
+        external: ["@vercel/nft"],
+      },
+    },
+  },
 });
