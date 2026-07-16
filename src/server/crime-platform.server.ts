@@ -15,6 +15,10 @@ export interface DistrictRecord {
   latitude: number;
   longitude: number;
   trend: number[];
+  literacyRate: number;
+  genderRatio: number;
+  density: number;
+  boundaryPolygon: Array<[number, number]>;
 }
 
 export interface PoliceStationRecord {
@@ -134,7 +138,16 @@ export interface DashboardSummary {
   monthlyTrends: Array<{ month: string; crimes: number; firs: number }>;
   crimeCategories: Array<{ name: string; value: number }>;
   recentFirs: FirRecord[];
-  topCrimeDistricts: Array<{ id: string; name: string; crimes: number; hotspots: number; policeStations: number }>;
+  topCrimeDistricts: Array<{
+    id: string;
+    name: string;
+    crimes: number;
+    hotspots: number;
+    policeStations: number;
+    riskScore?: number;
+    riskLevel?: "Low" | "Medium" | "High";
+    riskReasons?: string[];
+  }>;
   heatmapPoints: Array<{ lat: number; lng: number; intensity: number; district: string; category: string }>;
   kpis: Array<{ label: string; value: string; hint: string }>;
 }
@@ -300,10 +313,10 @@ function buildDistricts(random: () => number): DistrictRecord[] {
   const grid = [
     [15.0, 75.6], [15.6, 76.9], [15.2, 74.5], [13.3, 77.0], [12.98, 77.59], [16.9, 77.5],
     [11.8, 77.2], [13.5, 77.6], [13.2, 75.8], [13.8, 76.5], [12.9, 74.85], [14.45, 75.9],
-    [15.46, 75.0], [15.43, 75.63], [13.0, 76.1], [14.8, 75.5], [17.34, 76.84], [12.42, 75.73],
-    [13.14, 78.13], [15.35, 76.15], [12.52, 76.9], [12.3, 76.64], [16.2, 77.35], [12.72, 77.3],
-    [13.93, 75.56], [13.31, 77.1], [13.34, 74.74], [14.6, 74.8], [16.83, 75.71], [16.75, 77.13],
-    [15.33, 75.35],
+    [15.46, 75.0], [15.42, 75.62], [13.0, 76.1], [14.79, 75.40], [17.33, 76.82], [12.42, 75.74],
+    [13.14, 78.13], [15.35, 76.15], [12.52, 76.9], [12.30, 76.64], [16.20, 77.36], [12.72, 77.28],
+    [13.93, 75.56], [13.34, 77.10], [13.34, 74.74], [14.80, 74.13], [16.83, 75.72], [16.77, 77.14],
+    [15.33, 76.52],
   ];
 
   return DISTRICT_NAMES.map((name, index) => {
@@ -319,12 +332,26 @@ function buildDistricts(random: () => number): DistrictRecord[] {
       return Math.max(5, Math.round(base + seasonal + random() * 12));
     });
 
+    const literacyRate = Math.round((68 + (index % 7) * 2.5 + random() * 3) * 10) / 10;
+    const genderRatio = Math.round(920 + (index % 9) * 12 + random() * 15);
+    const areaSqKm = Math.round(1500 + random() * 6500);
+    const density = Math.round(population / areaSqKm);
+
+    // Simulated shapefile boundaries representing district borders
+    const boundaryPolygon: Array<[number, number]> = [
+      [latitude - 0.15, longitude - 0.15],
+      [latitude - 0.15, longitude + 0.15],
+      [latitude + 0.15, longitude + 0.15],
+      [latitude + 0.15, longitude - 0.15],
+      [latitude - 0.15, longitude - 0.15],
+    ];
+
     return {
       id: `district-${String(index + 1).padStart(2, "0")}`,
       code: `K${String(index + 1).padStart(2, "00")}`,
       name,
       population,
-      areaSqKm: Math.round(1500 + random() * 6500),
+      areaSqKm,
       crimeCount,
       firCount,
       hotspotCount,
@@ -332,6 +359,10 @@ function buildDistricts(random: () => number): DistrictRecord[] {
       latitude,
       longitude,
       trend,
+      literacyRate,
+      genderRatio,
+      density,
+      boundaryPolygon,
     };
   });
 }
@@ -489,7 +520,7 @@ function ensureDataset(): Dataset {
   return dataset;
 }
 
-function getData() {
+export function getData() {
   return ensureDataset();
 }
 
@@ -611,6 +642,7 @@ export function createCrime(input: Partial<CrimeRecord>) {
     updatedAt: formatDate(now),
   };
   data.crimes.unshift(crime);
+  clearRagCache();
   return crime;
 }
 
@@ -618,6 +650,7 @@ export function updateCrime(id: string, patch: Partial<CrimeRecord>) {
   const crime = getCrime(id);
   if (!crime) return undefined;
   Object.assign(crime, patch, { updatedAt: formatDate(new Date()) });
+  clearRagCache();
   return crime;
 }
 
@@ -626,6 +659,7 @@ export function deleteCrime(id: string) {
   const index = data.crimes.findIndex((crime) => crime.id === id || crime.caseNumber === id);
   if (index < 0) return false;
   data.crimes.splice(index, 1);
+  clearRagCache();
   return true;
 }
 
@@ -654,6 +688,7 @@ export function updateFir(id: string, patch: Partial<FirRecord>) {
   const fir = getFir(id);
   if (!fir) return undefined;
   Object.assign(fir, patch);
+  clearRagCache();
   return fir;
 }
 
@@ -662,12 +697,13 @@ export function deleteFir(id: string) {
   const index = data.firs.findIndex((fir) => fir.id === id || fir.firNumber === id);
   if (index < 0) return false;
   data.firs.splice(index, 1);
+  clearRagCache();
   return true;
 }
 
 function districtCrimeStats() {
   const { crimes, districts, firs, policeStations } = getData();
-  return districts.map((district) => {
+  const mappedDistricts = districts.map((district) => {
     const districtCrimes = crimes.filter((crime) => crime.districtId === district.id);
     const districtFirs = firs.filter((fir) => fir.districtId === district.id);
     const hotspots = districtCrimes.filter((crime) => crime.severity === "Critical" || crime.repeatOffender).length;
@@ -677,6 +713,17 @@ function districtCrimeStats() {
       firCount: districtFirs.length,
       hotspotCount: Math.max(district.hotspotCount, hotspots),
       policeStationCount: policeStations.filter((station) => station.districtId === district.id).length,
+    };
+  });
+
+  const riskScores = calculateDistrictRiskScores(mappedDistricts, crimes);
+  return mappedDistricts.map((d) => {
+    const risk = riskScores.find((r) => r.districtId === d.id);
+    return {
+      ...d,
+      riskScore: risk?.score ?? 50,
+      riskLevel: risk?.level ?? "Medium",
+      riskReasons: risk?.reasons ?? ["Stable risk profile"],
     };
   });
 }
@@ -740,12 +787,15 @@ export function getDashboardSummary(): DashboardSummary {
     monthlyTrends,
     crimeCategories: [...categoryBuckets.entries()].map(([name, value]) => ({ name, value })).sort((left, right) => right.value - left.value),
     recentFirs: [...firs].sort((left, right) => right.dateFiled.localeCompare(left.dateFiled)).slice(0, 8),
-    topCrimeDistricts: topDistricts.map((district) => ({
+    topCrimeDistricts: topDistricts.map((district: any) => ({
       id: district.id,
       name: district.name,
       crimes: district.crimeCount,
       hotspots: district.hotspotCount,
       policeStations: district.policeStationCount,
+      riskScore: district.riskScore,
+      riskLevel: district.riskLevel,
+      riskReasons: district.riskReasons,
     })),
     heatmapPoints,
     kpis: [
@@ -814,16 +864,17 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     projected: Math.round(entry.observed * (1.04 + index * 0.01)),
   }));
 
-  const riskScores = districts
-    .slice()
-    .sort((left, right) => right.crimeCount - left.crimeCount)
-    .map((district, index) => ({
-      districtId: district.id,
-      district: district.name,
-      score: clamp(Math.round(district.crimeCount / 25 + district.hotspotCount * 2.8 + index * 1.1), 20, 99),
-      trend: district.trend.slice(-1)[0] - district.trend.slice(-4, -3)[0],
-    }))
-    .slice(0, 10);
+  const calculatedRiskScores = calculateDistrictRiskScores(districts, crimes);
+  const sortedRiskScores = [...calculatedRiskScores].sort((left, right) => right.score - left.score);
+
+  const riskScores = sortedRiskScores.map((r) => ({
+    districtId: r.districtId,
+    district: r.district,
+    score: r.score,
+    level: r.level,
+    reasons: r.reasons,
+    trend: districts.find((d) => d.id === r.districtId)?.trend.slice(-1)[0] ?? 0,
+  })).slice(0, 10);
 
   const anomalies = districts
     .filter((district) => district.crimeCount > districts.reduce((sum, item) => sum + item.crimeCount, 0) / districts.length * 1.4)
@@ -835,10 +886,10 @@ export function getAnalyticsSummary(): AnalyticsSummary {
       signal: `Crime activity is ${Math.round((district.crimeCount / districts.reduce((sum, item) => sum + item.crimeCount, 0)) * 100)}% of the state sample`,
     }));
 
-  const hotspots = riskScores.slice(0, 5).map((district) => ({
-    district: district.district,
-    score: district.score,
-    reason: `High repeat-offender density and elevated monthly trend`,
+  const hotspots = sortedRiskScores.slice(0, 5).map((r) => ({
+    district: r.district,
+    score: r.score,
+    reason: r.reasons.join(", "),
   }));
 
   return {
@@ -891,6 +942,109 @@ export function getNetworkGraphSummary(): NetworkGraphSummary {
       { label: "Hot districts", value: String(topDistricts.length) },
     ],
   };
+}
+
+export interface CriminalTimelineEvent {
+  id: string;
+  date: string;
+  type: "crime" | "fir" | "arrest" | "court" | "bail";
+  title: string;
+  description: string;
+  firNumber: string;
+  crimeType: string;
+}
+
+export interface CriminalProfile {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  repeatOffender: boolean;
+  status: string;
+  modusOperandi: string;
+  totalCrimes: number;
+  timeline: CriminalTimelineEvent[];
+}
+
+export function getCriminalTimelineData(): CriminalProfile[] {
+  const { crimes, accused, firs } = getData();
+  
+  return accused.map((acc) => {
+    const accCrimes = crimes.filter((c) => c.accusedId === acc.id || c.accusedName === acc.name);
+    const events: CriminalTimelineEvent[] = [];
+    
+    accCrimes.forEach((crime) => {
+      const linkedFir = firs.find((f) => f.id === crime.firId || f.crimeId === crime.id);
+      const firNum = linkedFir?.firNumber ?? "N/A";
+      const crimeDate = new Date(crime.crimeTime);
+      
+      // 1. Crime committed event
+      events.push({
+        id: `event-${crime.id}-committed`,
+        date: crime.crimeTime,
+        type: "crime",
+        title: "Crime Incident",
+        description: `${crime.title} — Category: ${crime.category} using weapon: ${crime.weapon}. Modus Operandi: ${crime.modusOperandi}`,
+        firNumber: firNum,
+        crimeType: crime.crimeType,
+      });
+
+      // 2. FIR Registered event
+      if (linkedFir) {
+        events.push({
+          id: `event-${crime.id}-fir`,
+          date: linkedFir.dateFiled,
+          type: "fir",
+          title: "FIR Registered",
+          description: `FIR ${linkedFir.firNumber} registered under section ${linkedFir.section} at ${linkedFir.policeStationName}. Officer: ${linkedFir.officer}. Status: ${linkedFir.status}.`,
+          firNumber: firNum,
+          crimeType: crime.crimeType,
+        });
+      }
+
+      // 3. Arrest History event
+      if (crime.arrestStatus && crime.arrestStatus !== "Not Arrested") {
+        const arrestDate = new Date(crimeDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(); // Simulated 2 days later
+        events.push({
+          id: `event-${crime.id}-arrest`,
+          date: arrestDate,
+          type: crime.arrestStatus === "Bail Granted" ? "bail" : "arrest",
+          title: crime.arrestStatus,
+          description: `Arrest status updated to: ${crime.arrestStatus} under supervision of ${crime.investigationOfficer}.`,
+          firNumber: firNum,
+          crimeType: crime.crimeType,
+        });
+      }
+
+      // 4. Court status event
+      if (crime.courtStatus && crime.courtStatus !== "Not Filed") {
+        const courtDate = new Date(crimeDate.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(); // Simulated 15 days later
+        events.push({
+          id: `event-${crime.id}-court`,
+          date: courtDate,
+          type: "court",
+          title: crime.courtStatus,
+          description: `Court trial status updated to: ${crime.courtStatus}. Case status is currently: ${crime.status}.`,
+          firNumber: firNum,
+          crimeType: crime.crimeType,
+        });
+      }
+    });
+
+    const sortedTimeline = events.sort((left, right) => left.date.localeCompare(right.date));
+
+    return {
+      id: acc.id,
+      name: acc.name,
+      age: acc.age,
+      gender: acc.gender,
+      repeatOffender: acc.repeatOffender,
+      status: acc.status,
+      modusOperandi: acc.modusOperandi,
+      totalCrimes: accCrimes.length,
+      timeline: sortedTimeline,
+    };
+  });
 }
 
 export function getAssistantResponse(question: string): AssistantResponse {
@@ -957,8 +1111,11 @@ export function getAssistantResponse(question: string): AssistantResponse {
  */
 import { routeIntent } from "./modules/intent-router";
 import { executeTextToSql } from "./modules/text-to-sql";
-import { retrieveFromRag } from "./modules/rag";
+import { retrieveFromRag, clearRagCache } from "./modules/rag";
 import { runAnalysis } from "./modules/analysis-engine";
+import { calculateDistrictRiskScores } from "./modules/risk-scorer";
+import { findSimilarCases } from "./modules/similar-finder";
+import { enrichAssistantResponseWithRecommendations } from "./modules/investigation-assistant";
 import {
   generateSqlResponse,
   generateRagResponse,
@@ -970,8 +1127,235 @@ import {
 export type { HybridAssistantResponse };
 
 export function getHybridAssistantResponse(question: string): HybridAssistantResponse {
+  const response = internalGetHybridAssistantResponse(question);
+  return enrichAssistantResponseWithRecommendations(response, question);
+}
+
+function internalGetHybridAssistantResponse(question: string): HybridAssistantResponse {
+  let cleanQuestion = question;
+  let contextPage = "";
+  let contextRows: any[] = [];
+
+  const contextIndex = question.indexOf("\nContext:");
+  if (contextIndex !== -1) {
+    cleanQuestion = question.substring(0, contextIndex).trim();
+    const contextStr = question.substring(contextIndex + 9).trim();
+    try {
+      const parsed = JSON.parse(contextStr);
+      if (parsed && typeof parsed === "object") {
+        if (Array.isArray(parsed)) {
+          contextRows = parsed;
+        } else {
+          contextPage = parsed.page ?? "";
+          contextRows = parsed.rows ?? [];
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  } else {
+    const contextIndexNoNL = question.indexOf("Context:");
+    if (contextIndexNoNL !== -1) {
+      cleanQuestion = question.substring(0, contextIndexNoNL).trim();
+      const contextStr = question.substring(contextIndexNoNL + 8).trim();
+      try {
+        const parsed = JSON.parse(contextStr);
+        if (parsed && typeof parsed === "object") {
+          if (Array.isArray(parsed)) {
+            contextRows = parsed;
+          } else {
+            contextPage = parsed.page ?? "";
+            contextRows = parsed.rows ?? [];
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  // Similar Case Finder checking (Feature 1)
+  const isSimilarCasesQuery = /similar|matching cases|case finder|compare fir|find similarity/i.test(cleanQuestion);
+  if (isSimilarCasesQuery) {
+    const caseMatch = cleanQuestion.match(/case\/[a-z0-9]+\/\d+/i) || cleanQuestion.match(/fir\/[a-z0-9]+\/\d+/i) || cleanQuestion.match(/crime-[a-z0-9]+/i) || cleanQuestion.match(/fir-[a-z0-9]+/i);
+    let targetKey = "";
+    if (caseMatch) {
+      targetKey = caseMatch[0].toUpperCase();
+    } else if (contextRows.length > 0) {
+      targetKey = contextRows[0].caseNumber ?? contextRows[0].firNumber ?? contextRows[0].id ?? "";
+    } else {
+      const firstCrime = getData().crimes[0];
+      targetKey = firstCrime ? firstCrime.caseNumber : "";
+    }
+
+    if (targetKey) {
+      const matches = findSimilarCases(targetKey, 5);
+      if (matches.length > 0) {
+        let answer = `### 🔍 Similar Case Finder Results\n\n`;
+        answer += `Target case/FIR: **${targetKey}**\n\n`;
+        answer += `We compared all records in the database based on crime type, location, suspects, modus operandi, and details. Here are the top matches:\n\n`;
+
+        matches.forEach((m, idx) => {
+          answer += `**${idx + 1}. Case ${m.caseNumber}** (${m.similarityPercentage}% Match)\n`;
+          answer += `• **FIR Number**: ${m.firNumber}\n`;
+          answer += `• **Crime Type**: ${m.crimeType} (${m.category})\n`;
+          answer += `• **Location**: ${m.districtName}\n`;
+          answer += `• **Accused**: ${m.accusedName}\n`;
+          answer += `• **Modus Operandi**: ${m.modusOperandi}\n`;
+          answer += `• **Reasons for Match**: ${m.matchReasons.join(", ")}\n\n`;
+        });
+
+        const finalResponse: HybridAssistantResponse = {
+          answer,
+          confidence: 0.98,
+          citations: ["Similar Case Finder Module", "FIR Database"],
+          suggestions: [
+            `Show details for ${matches[0].caseNumber}`,
+            `Investigate suspect ${matches[0].accusedName}`,
+            "Show crime trends",
+          ],
+          handledBy: "analysis",
+          tableRows: matches as any[],
+          tableColumns: ["caseNumber", "firNumber", "crimeType", "districtName", "similarityPercentage", "modusOperandi"],
+        };
+
+        return finalResponse;
+      } else {
+        return {
+          answer: `Could not find any similar cases for record **${targetKey}**. Please check if the case/FIR number is correct.`,
+          confidence: 0.85,
+          citations: ["Similar Case Finder Module"],
+          suggestions: ["List recent FIRs", "Show repeat offenders"],
+          handledBy: "analysis",
+        };
+      }
+    }
+  }
+
+  // Handle direct record lookups from page context
+  if (contextRows.length > 0) {
+    const caseMatch = cleanQuestion.match(/case\/[a-z0-9]+\/\d+/i);
+    const firMatch = cleanQuestion.match(/fir\/[a-z0-9]+\/\d+/i);
+
+    if (caseMatch) {
+      const matchStr = caseMatch[0].toUpperCase();
+      const matchedRow = contextRows.find((r) => r.caseNumber?.toUpperCase() === matchStr);
+      if (matchedRow) {
+        return {
+          answer: `Found case **${matchedRow.caseNumber}** in the page records:\n\n` +
+                  `• **Title**: ${matchedRow.title ?? matchedRow.crimeType ?? "Crime Record"}\n` +
+                  `• **District**: ${matchedRow.districtName}\n` +
+                  `• **Severity**: ${matchedRow.severity}\n` +
+                  `• **Status**: ${matchedRow.status}\n` +
+                  `• **Officer**: ${matchedRow.investigationOfficer ?? matchedRow.officer}\n` +
+                  `• **Accused**: ${matchedRow.accusedName ?? "Unknown"}\n` +
+                  `• **Victim**: ${matchedRow.victimName ?? "Unknown"}\n` +
+                  `• **Modus Operandi**: ${matchedRow.modusOperandi ?? "N/A"}`,
+          confidence: 0.99,
+          citations: ["Visible page context"],
+          suggestions: ["Show open cases", "Show critical crimes"],
+          handledBy: "sql",
+          tableRows: [matchedRow],
+          tableColumns: ["caseNumber", "districtName", "crimeType", "severity", "status", "investigationOfficer"],
+        };
+      }
+    }
+
+    if (firMatch) {
+      const matchStr = firMatch[0].toUpperCase();
+      const matchedRow = contextRows.find((r) => r.firNumber?.toUpperCase() === matchStr);
+      if (matchedRow) {
+        return {
+          answer: `Found FIR **${matchedRow.firNumber}** in the page records:\n\n` +
+                  `• **District**: ${matchedRow.districtName}\n` +
+                  `• **Police Station**: ${matchedRow.policeStationName}\n` +
+                  `• **Officer**: ${matchedRow.officer}\n` +
+                  `• **Status**: ${matchedRow.status}\n` +
+                  `• **IPC Section**: ${matchedRow.section}\n` +
+                  `• **Date Filed**: ${matchedRow.dateFiled?.slice(0, 10) ?? "N/A"}\n` +
+                  `• **Details**: ${matchedRow.caseDetails}`,
+          confidence: 0.99,
+          citations: ["Visible page context"],
+          suggestions: ["List recent FIRs", "Filter by officer"],
+          handledBy: "sql",
+          tableRows: [matchedRow],
+          tableColumns: ["firNumber", "districtName", "policeStationName", "officer", "status", "section"],
+        };
+      }
+    }
+  }
+
+  // Handle summary queries specifically for page context
+  const isContextSummaryQuery = /summarise|summarize|tell me about|explain|describe|what is shown|records shown|this page|these records|these cases|these fir/i.test(cleanQuestion);
+  if (contextRows.length > 0 && isContextSummaryQuery) {
+    const isCrime = contextPage.toLowerCase().includes("crime") || "caseNumber" in contextRows[0];
+    const isFir = contextPage.toLowerCase().includes("fir") || "firNumber" in contextRows[0];
+
+    if (isCrime) {
+      const total = contextRows.length;
+      const categories: Record<string, number> = {};
+      const severities: Record<string, number> = {};
+      const statuses: Record<string, number> = {};
+
+      contextRows.forEach((r) => {
+        if (r.category) categories[r.category] = (categories[r.category] ?? 0) + 1;
+        if (r.severity) severities[r.severity] = (severities[r.severity] ?? 0) + 1;
+        if (r.status) statuses[r.status] = (statuses[r.status] ?? 0) + 1;
+      });
+
+      const catStr = Object.entries(categories).map(([k, v]) => `${k} (${v})`).join(", ");
+      const sevStr = Object.entries(severities).map(([k, v]) => `${k} (${v})`).join(", ");
+      const statStr = Object.entries(statuses).map(([k, v]) => `${k} (${v})`).join(", ");
+
+      let answer = `Here is a summary of the ${total} crime records visible on this page:\n\n` +
+                   `• **Categories**: ${catStr || "None"}\n` +
+                   `• **Severities**: ${sevStr || "None"}\n` +
+                   `• **Statuses**: ${statStr || "None"}\n\n` +
+                   `You can search, filter, and drill down on these records using the platform controls.`;
+
+      return {
+        answer,
+        confidence: 0.98,
+        citations: ["Visible page context"],
+        suggestions: ["Show open cases", "Show critical crimes", "Show crime trends"],
+        handledBy: "sql",
+        tableRows: contextRows,
+        tableColumns: ["caseNumber", "districtName", "crimeType", "severity", "status", "investigationOfficer"],
+      };
+    }
+
+    if (isFir) {
+      const total = contextRows.length;
+      const statuses: Record<string, number> = {};
+      const sections: Record<string, number> = {};
+
+      contextRows.forEach((r) => {
+        if (r.status) statuses[r.status] = (statuses[r.status] ?? 0) + 1;
+        if (r.section) sections[r.section] = (sections[r.section] ?? 0) + 1;
+      });
+
+      const statStr = Object.entries(statuses).map(([k, v]) => `${k} (${v})`).join(", ");
+      const secStr = Object.entries(sections).map(([k, v]) => `${k} (${v})`).join(", ");
+
+      let answer = `Here is a summary of the ${total} FIR records visible on this page:\n\n` +
+                   `• **Statuses**: ${statStr || "None"}\n` +
+                   `• **Sections**: ${secStr || "None"}\n\n` +
+                   `You can inspect live case details or filter these FIRs using the page controls.`;
+
+      return {
+        answer,
+        confidence: 0.98,
+        citations: ["Visible page context"],
+        suggestions: ["List recent FIRs", "Filter by officer", "Download report"],
+        handledBy: "sql",
+        tableRows: contextRows,
+        tableColumns: ["firNumber", "districtName", "policeStationName", "officer", "status", "section"],
+      };
+    }
+  }
+
   // Step 3: Understand intent
-  const { intent, normalisedQuery, analysisType } = routeIntent(question);
+  const { intent, normalisedQuery, analysisType } = routeIntent(cleanQuestion);
 
   // Step 4 & 5: Route to the correct data retrieval module
 
@@ -979,27 +1363,33 @@ export function getHybridAssistantResponse(question: string): HybridAssistantRes
   if (intent === "caw") {
     // Try analysis engine first for rich chart + heatmap output
     const analysisResult = runAnalysis("caw", normalisedQuery);   // Steps 6 & 7 – CAW analysis
-    return generateAnalysisResponse(analysisResult, question);    // Steps 8 & 9 – LLM response
+    return generateAnalysisResponse(analysisResult, cleanQuestion);    // Steps 8 & 9 – LLM response
   }
 
   if (intent === "sql") {
     const sqlResult = executeTextToSql(normalisedQuery, "sql");   // Step 5 – execute query
-    return generateSqlResponse(sqlResult, question);              // Steps 8 & 9 – LLM response
+    return generateSqlResponse(sqlResult, cleanQuestion);              // Steps 8 & 9 – LLM response
   }
 
   if (intent === "rag") {
     const ragResult = retrieveFromRag(normalisedQuery);           // Step 5 – retrieve chunks
-    return generateRagResponse(ragResult, question);              // Steps 8 & 9 – LLM response
+    return generateRagResponse(ragResult, cleanQuestion);              // Steps 8 & 9 – LLM response
   }
 
   if (intent === "analysis") {
     const analysisResult = runAnalysis(analysisType ?? "trend", normalisedQuery); // Steps 6 & 7
-    return generateAnalysisResponse(analysisResult, question);    // Steps 8 & 9 – LLM response
+    return generateAnalysisResponse(analysisResult, cleanQuestion);    // Steps 8 & 9 – LLM response
+  }
+
+  // General fallback: check if we can retrieve relevant documents from RAG before returning the intro
+  const ragResult = retrieveFromRag(normalisedQuery);
+  if (ragResult.chunks.length > 0 && ragResult.chunks[0].score > 0.1) {
+    return generateRagResponse(ragResult, cleanQuestion);
   }
 
   // General fallback
   const { totals } = getDashboardSummary();
-  return generateGeneralResponse(question, totals.crimes, totals.districts);
+  return generateGeneralResponse(cleanQuestion, totals.crimes, totals.districts);
 }
 
 export function getReportsSummary() {

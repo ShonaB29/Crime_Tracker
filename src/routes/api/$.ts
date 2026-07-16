@@ -18,6 +18,7 @@ import {
   updateFir,
   // Hybrid AI workflow orchestrator (Steps 3–9)
   getHybridAssistantResponse,
+  getCriminalTimelineData,
 } from "@/server/crime-platform.server";
 
 function splitResource(path: string) {
@@ -127,6 +128,10 @@ export const Route = createFileRoute("/api/$")({
 
         if (resource === "network") {
           return Response.json(getNetworkGraphSummary());
+        }
+
+        if (resource === "timeline") {
+          return Response.json(getCriminalTimelineData());
         }
 
         if (resource === "assistant") {

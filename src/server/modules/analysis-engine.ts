@@ -14,6 +14,8 @@ import {
   getNetworkGraphSummary,
   getDashboardSummary,
   getDistrictSummaries,
+  getData,
+  DistrictRecord,
 } from "@/server/crime-platform.server";
 
 import {
@@ -32,12 +34,24 @@ export interface NetworkNode  { id: string; label: string; type: string; value: 
 export interface NetworkEdge  { source: string; target: string; label: string; weight: number }
 export interface RiskScore    { district: string; score: number; trend: number }
 
+/** Model validation metrics produced by the 80/20 train-test split */
+export interface ModelValidation {
+  trainSize: number;
+  testSize: number;
+  mae: number;        // Mean Absolute Error
+  rmse: number;       // Root Mean Squared Error
+  r2: number;         // R² coefficient of determination (0–1)
+  mape: number;       // Mean Absolute Percentage Error (%)
+}
+
 export interface AnalysisResult {
-  type: "trend" | "hotspot" | "network" | "prediction" | "caw";
+  type: "trend" | "hotspot" | "network" | "prediction" | "caw" | "correlation";
   insight: string;
   chartData?: TrendPoint[] | HotspotPoint[] | RiskScore[] | CawTrendPoint[] | Record<string, unknown>[];
   networkData?: { nodes: NetworkNode[]; edges: NetworkEdge[] };
   metrics: Record<string, string | number>;
+  /** Model validation — only present for prediction type */
+  validation?: ModelValidation;
   /** CAW category breakdown for bar chart */
   cawBreakdown?: Array<{ category: string; count: number }>;
   /** Top districts for CAW heatmap */
@@ -200,45 +214,187 @@ function analyseNetwork(): AnalysisResult {
   };
 }
 
+// ── Model validation helpers ───────────────────────────────────────────────────
+
+/**
+ * Fits a simple linear regression (OLS) on the given (x, y) pairs.
+ * Returns intercept and slope.
+ */
+export function fitLinearRegression(y: number[]): { slope: number; intercept: number } {
+  const n = y.length;
+  if (n < 2) return { slope: 0, intercept: y[0] ?? 0 };
+  const xMean = (n - 1) / 2;
+  const yMean = y.reduce((s, v) => s + v, 0) / n;
+  const slope =
+    y.reduce((s, v, i) => s + (i - xMean) * (v - yMean), 0) /
+    y.reduce((s, _, i) => s + (i - xMean) ** 2, 0);
+  const intercept = yMean - slope * xMean;
+  return { slope, intercept };
+}
+
+/**
+ * Evaluates a fitted model on test data and returns MAE, RMSE, R², MAPE.
+ * predicted[i] = intercept + slope * (trainSize + i)
+ */
+export function evaluateModel(
+  testY: number[],
+  slope: number,
+  intercept: number,
+  trainSize: number,
+): ModelValidation {
+  const n = testY.length;
+  const predicted = testY.map((_, i) => intercept + slope * (trainSize + i));
+
+  const mae  = predicted.reduce((s, p, i) => s + Math.abs(p - testY[i]), 0) / n;
+  const mse  = predicted.reduce((s, p, i) => s + (p - testY[i]) ** 2, 0) / n;
+  const rmse = Math.sqrt(mse);
+
+  const yMean = testY.reduce((s, v) => s + v, 0) / n;
+  const ssTot = testY.reduce((s, v) => s + (v - yMean) ** 2, 0);
+  const ssRes = predicted.reduce((s, p, i) => s + (p - testY[i]) ** 2, 0);
+  const r2    = ssTot === 0 ? 1 : Math.max(0, 1 - ssRes / ssTot);
+
+  const mape  = predicted.reduce((s, p, i) => s + (testY[i] === 0 ? 0 : Math.abs((p - testY[i]) / testY[i])), 0) / n * 100;
+
+  return {
+    trainSize,
+    testSize: n,
+    mae:  Math.round(mae  * 100) / 100,
+    rmse: Math.round(rmse * 100) / 100,
+    r2:   Math.round(r2   * 1000) / 1000,
+    mape: Math.round(mape * 100) / 100,
+  };
+}
+
 // ── Prediction ─────────────────────────────────────────────────────────────────
 
 function analysePrediction(): AnalysisResult {
   const analytics = getAnalyticsSummary();
   const series = analytics.predictionGraph;
-  const n = series.length;
-  const xMean = (n - 1) / 2;
-  const yMean = series.reduce((s, p) => s + p.observed, 0) / n;
-  const slope = series.reduce((s, p, i) => s + (i - xMean) * (p.observed - yMean), 0) /
-    series.reduce((s, _, i) => s + (i - xMean) ** 2, 0);
-  const nextMonthProjection = Math.round(series.at(-1)!.observed + slope);
+
+  // ── 80 / 20 train-test split ──────────────────────────────────────────────
+  const splitIdx  = Math.floor(series.length * 0.8);          // e.g. 9 of 12
+  const trainY    = series.slice(0, splitIdx).map((p) => p.observed);
+  const testY     = series.slice(splitIdx).map((p) => p.observed);
+
+  const { slope, intercept } = fitLinearRegression(trainY);
+  const validation = evaluateModel(testY, slope, intercept, splitIdx);
+
+  // ── Forecast ──────────────────────────────────────────────────────────────
+  const nextMonthProjection = Math.round(intercept + slope * series.length);
   const direction = slope > 0 ? "increasing" : "decreasing";
 
   const extended: TrendPoint[] = [
     ...series,
     { month: "M+1", observed: 0, projected: nextMonthProjection },
-    { month: "M+2", observed: 0, projected: Math.round(nextMonthProjection + slope) },
-    { month: "M+3", observed: 0, projected: Math.round(nextMonthProjection + slope * 2) },
+    { month: "M+2", observed: 0, projected: Math.round(intercept + slope * (series.length + 1)) },
+    { month: "M+3", observed: 0, projected: Math.round(intercept + slope * (series.length + 2)) },
   ];
 
   return {
     type: "prediction",
-    insight: `Predictive model (linear regression) shows crime counts are ${direction} at ${Math.abs(Math.round(slope))} crimes/month. Next month projection: ${nextMonthProjection} crimes. Top risk districts: ${analytics.riskScores.slice(0, 3).map((r) => r.district).join(", ")}.`,
+    insight:
+      `Predictive model (linear regression, 80/20 split) shows crime counts are ${direction} ` +
+      `at ${Math.abs(Math.round(slope))} crimes/month. ` +
+      `Next month projection: ${nextMonthProjection} crimes. ` +
+      `Model accuracy — MAE: ${validation.mae}, RMSE: ${validation.rmse}, R²: ${validation.r2}. ` +
+      `Top risk districts: ${analytics.riskScores.slice(0, 3).map((r) => r.district).join(", ")}.`,
     chartData: extended,
-    metrics: { slope: Math.round(slope), nextMonthProjection, direction, topRiskDistrict: analytics.riskScores[0]?.district ?? "N/A" },
+    validation,
+    metrics: {
+      slope:              Math.round(slope),
+      intercept:          Math.round(intercept),
+      nextMonthProjection,
+      direction,
+      trainSamples:       validation.trainSize,
+      testSamples:        validation.testSize,
+      mae:                validation.mae,
+      rmse:               validation.rmse,
+      r2:                 validation.r2,
+      mape:               `${validation.mape}%`,
+      topRiskDistrict:    analytics.riskScores[0]?.district ?? "N/A",
+    },
   };
+}
+
+// ── Correlation & Demographics ────────────────────────────────────────────────
+
+function analyseCorrelation(normalisedQuery: string): AnalysisResult {
+  const districts = getData().districts;
+
+  let xLabel = "Population Density (per sq km)";
+  let yLabel = "Hotspot Count";
+  let xVal = (d: DistrictRecord) => d.density;
+  let yVal = (d: DistrictRecord) => d.hotspotCount;
+
+  if (normalisedQuery.includes("literacy")) {
+    xLabel = "Literacy Rate (%)";
+    yLabel = "Crime Rate (per 1,000 population)";
+    xVal = (d: DistrictRecord) => d.literacyRate;
+    yVal = (d: DistrictRecord) => Math.round((d.crimeCount / d.population) * 1000 * 10) / 10;
+  } else if (normalisedQuery.includes("gender") || normalisedQuery.includes("sex") || normalisedQuery.includes("women") || normalisedQuery.includes("ratio")) {
+    xLabel = "Gender Ratio (Females per 1,000 Males)";
+    yLabel = "Crimes Against Women (CAW)";
+    xVal = (d: DistrictRecord) => d.genderRatio;
+    
+    const cawRecords = getCawRecords();
+    yVal = (d: DistrictRecord) => {
+      const rec = cawRecords.find((r) => r.district.toLowerCase() === d.name.toLowerCase() && r.year === 2021);
+      return rec ? rec.total_caw : 0;
+    };
+  }
+
+  const X = districts.map(xVal);
+  const Y = districts.map(yVal);
+  const correlation = pearsonCorrelation(X, Y);
+
+  const chartData = districts.map((d) => ({
+    district: d.name,
+    xValue: xVal(d),
+    yValue: yVal(d),
+  }));
+
+  const direction = correlation > 0 ? "positive" : "negative";
+  const strength = Math.abs(correlation) > 0.7 ? "strong" : Math.abs(correlation) > 0.4 ? "moderate" : "weak";
+
+  return {
+    type: "correlation",
+    insight: `Demographic correlation analysis reveals a ${strength} ${direction} correlation (Pearson r = ${correlation.toFixed(3)}) between ${xLabel} and ${yLabel} across the 31 districts of Karnataka.`,
+    chartData: chartData as any,
+    metrics: {
+      correlation: correlation.toFixed(3),
+      strength,
+      direction,
+      xLabel,
+      yLabel,
+    },
+  };
+}
+
+function pearsonCorrelation(X: number[], Y: number[]): number {
+  const n = X.length;
+  if (n === 0) return 0;
+  const xMean = X.reduce((s, v) => s + v, 0) / n;
+  const yMean = Y.reduce((s, v) => s + v, 0) / n;
+  const num = X.reduce((s, x, i) => s + (x - xMean) * (Y[i] - yMean), 0);
+  const denX = X.reduce((s, x) => s + (x - xMean) ** 2, 0);
+  const denY = Y.reduce((s, y) => s + (y - yMean) ** 2, 0);
+  if (denX === 0 || denY === 0) return 0;
+  return num / Math.sqrt(denX * denY);
 }
 
 // ── Public entry point ─────────────────────────────────────────────────────────
 
 export function runAnalysis(
-  type: "trend" | "hotspot" | "network" | "prediction" | "caw",
+  type: "trend" | "hotspot" | "network" | "prediction" | "caw" | "correlation",
   normalisedQuery = ""
 ): AnalysisResult {
   switch (type) {
-    case "caw":        return analyseCaw(normalisedQuery);
-    case "hotspot":    return analyseHotspots();
-    case "network":    return analyseNetwork();
-    case "prediction": return analysePrediction();
-    default:           return analyseTrend();
+    case "caw":         return analyseCaw(normalisedQuery);
+    case "hotspot":     return analyseHotspots();
+    case "network":     return analyseNetwork();
+    case "prediction":  return analysePrediction();
+    case "correlation": return analyseCorrelation(normalisedQuery);
+    default:            return analyseTrend();
   }
 }

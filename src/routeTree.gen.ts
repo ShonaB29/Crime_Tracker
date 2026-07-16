@@ -15,11 +15,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as AuthenticatedTimelineRouteImport } from './routes/_authenticated/timeline'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedNetworkRouteImport } from './routes/_authenticated/network'
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
 import { Route as AuthenticatedFirRouteImport } from './routes/_authenticated/fir'
+import { Route as AuthenticatedEvidenceRouteImport } from './routes/_authenticated/evidence'
 import { Route as AuthenticatedDistrictsRouteImport } from './routes/_authenticated/districts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCrimesRouteImport } from './routes/_authenticated/crimes'
@@ -56,6 +58,11 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTimelineRoute = AuthenticatedTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -79,6 +86,11 @@ const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
 const AuthenticatedFirRoute = AuthenticatedFirRouteImport.update({
   id: '/fir',
   path: '/fir',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEvidenceRoute = AuthenticatedEvidenceRouteImport.update({
+  id: '/evidence',
+  path: '/evidence',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDistrictsRoute = AuthenticatedDistrictsRouteImport.update({
@@ -123,11 +135,13 @@ export interface FileRoutesByFullPath {
   '/crimes': typeof AuthenticatedCrimesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/districts': typeof AuthenticatedDistrictsRoute
+  '/evidence': typeof AuthenticatedEvidenceRoute
   '/fir': typeof AuthenticatedFirRoute
   '/map': typeof AuthenticatedMapRoute
   '/network': typeof AuthenticatedNetworkRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/timeline': typeof AuthenticatedTimelineRoute
   '/api/$': typeof ApiSplatRoute
 }
 export interface FileRoutesByTo {
@@ -141,11 +155,13 @@ export interface FileRoutesByTo {
   '/crimes': typeof AuthenticatedCrimesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/districts': typeof AuthenticatedDistrictsRoute
+  '/evidence': typeof AuthenticatedEvidenceRoute
   '/fir': typeof AuthenticatedFirRoute
   '/map': typeof AuthenticatedMapRoute
   '/network': typeof AuthenticatedNetworkRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/timeline': typeof AuthenticatedTimelineRoute
   '/api/$': typeof ApiSplatRoute
 }
 export interface FileRoutesById {
@@ -161,11 +177,13 @@ export interface FileRoutesById {
   '/_authenticated/crimes': typeof AuthenticatedCrimesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/districts': typeof AuthenticatedDistrictsRoute
+  '/_authenticated/evidence': typeof AuthenticatedEvidenceRoute
   '/_authenticated/fir': typeof AuthenticatedFirRoute
   '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/network': typeof AuthenticatedNetworkRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/timeline': typeof AuthenticatedTimelineRoute
   '/api/$': typeof ApiSplatRoute
 }
 export interface FileRouteTypes {
@@ -181,11 +199,13 @@ export interface FileRouteTypes {
     | '/crimes'
     | '/dashboard'
     | '/districts'
+    | '/evidence'
     | '/fir'
     | '/map'
     | '/network'
     | '/reports'
     | '/settings'
+    | '/timeline'
     | '/api/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -199,11 +219,13 @@ export interface FileRouteTypes {
     | '/crimes'
     | '/dashboard'
     | '/districts'
+    | '/evidence'
     | '/fir'
     | '/map'
     | '/network'
     | '/reports'
     | '/settings'
+    | '/timeline'
     | '/api/$'
   id:
     | '__root__'
@@ -218,11 +240,13 @@ export interface FileRouteTypes {
     | '/_authenticated/crimes'
     | '/_authenticated/dashboard'
     | '/_authenticated/districts'
+    | '/_authenticated/evidence'
     | '/_authenticated/fir'
     | '/_authenticated/map'
     | '/_authenticated/network'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/timeline'
     | '/api/$'
   fileRoutesById: FileRoutesById
 }
@@ -279,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/timeline': {
+      id: '/_authenticated/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof AuthenticatedTimelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -312,6 +343,13 @@ declare module '@tanstack/react-router' {
       path: '/fir'
       fullPath: '/fir'
       preLoaderRoute: typeof AuthenticatedFirRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/evidence': {
+      id: '/_authenticated/evidence'
+      path: '/evidence'
+      fullPath: '/evidence'
+      preLoaderRoute: typeof AuthenticatedEvidenceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/districts': {
@@ -366,11 +404,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrimesRoute: typeof AuthenticatedCrimesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDistrictsRoute: typeof AuthenticatedDistrictsRoute
+  AuthenticatedEvidenceRoute: typeof AuthenticatedEvidenceRoute
   AuthenticatedFirRoute: typeof AuthenticatedFirRoute
   AuthenticatedMapRoute: typeof AuthenticatedMapRoute
   AuthenticatedNetworkRoute: typeof AuthenticatedNetworkRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTimelineRoute: typeof AuthenticatedTimelineRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -380,11 +420,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrimesRoute: AuthenticatedCrimesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDistrictsRoute: AuthenticatedDistrictsRoute,
+  AuthenticatedEvidenceRoute: AuthenticatedEvidenceRoute,
   AuthenticatedFirRoute: AuthenticatedFirRoute,
   AuthenticatedMapRoute: AuthenticatedMapRoute,
   AuthenticatedNetworkRoute: AuthenticatedNetworkRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTimelineRoute: AuthenticatedTimelineRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

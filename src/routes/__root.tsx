@@ -16,6 +16,7 @@ import "@fontsource/oxanium/700.css";
 import "@fontsource-variable/jetbrains-mono/index.css";
 
 import appCss from "../styles.css?url";
+import kspEmblem from "../assets/ksp-emblem.png?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
@@ -85,23 +86,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "KSP Crime Intelligence Platform" },
       { name: "description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { name: "author", content: "KSP" },
+      { property: "og:title", content: "KSP Crime Intelligence Platform" },
       { property: "og:description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:site", content: "@ksp" },
+      { name: "twitter:title", content: "KSP Crime Intelligence Platform" },
       { name: "twitter:description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cdf255bf-c5bd-46ba-827f-f55dfc32826f/id-preview-b55887d6--f700e729-1083-4f3b-b1cf-54becd62d088.lovable.app-1782889343998.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/cdf255bf-c5bd-46ba-827f-f55dfc32826f/id-preview-b55887d6--f700e729-1083-4f3b-b1cf-54becd62d088.lovable.app-1782889343998.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        href: kspEmblem,
       },
     ],
   }),

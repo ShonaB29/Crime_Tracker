@@ -11,8 +11,9 @@
  *   - Follow-up suggestion pills            (existing UI, unchanged)
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import {
   CartesianGrid,
   Line,
@@ -25,10 +26,13 @@ import {
   YAxis,
   Cell,
 } from "recharts";
+import { Mic, Volume2, Settings, FileDown } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 // ── Response type mirrors HybridAssistantResponse from the server ──────────────
 interface HybridResponse {
@@ -46,13 +50,23 @@ interface HybridResponse {
   heatmapPoints?: Array<{ lat: number; lng: number; intensity: number; district: string; category: string }>;
   /** CAW category breakdown for bar chart */
   cawBreakdown?: Array<{ category: string; count: number }>;
+  processingTimeMs?: number;
+  timestamp?: string;
 }
 
 async function askHybridAssistant(question: string): Promise<HybridResponse> {
+  const start = performance.now();
   // Call the new hybrid AI workflow endpoint
   const response = await fetch(`/api/ai-assistant?question=${encodeURIComponent(question)}`);
   if (!response.ok) throw new Error("Assistant unavailable");
-  return response.json();
+  const data = await response.json();
+  const end = performance.now();
+  
+  return {
+    ...data,
+    processingTimeMs: Math.round(end - start),
+    timestamp: new Date().toLocaleTimeString(),
+  };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -201,8 +215,9 @@ function MetricsGrid({ metrics }: { metrics: Record<string, string | number> }) 
 // ── Main page component ────────────────────────────────────────────────────────
 export function AssistantPage() {
   const [question, setQuestion] = useState("Show crime trends");
-  // Ref to the response card for PDF print
+  // Ref to the response card for PDF print (unused now but preserved for layout compat)
   const printRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const query = useQuery({
     queryKey: ["ai-assistant", question],
@@ -211,9 +226,302 @@ export function AssistantPage() {
 
   const suggestions = useMemo(() => query.data?.suggestions ?? [], [query.data]);
 
-  // Trigger browser print dialog scoped to the response card
+  // Voice Assistant states
+  const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem("voice_enabled") === "true");
+  const [voiceSpeed, setVoiceSpeed] = useState(() => Number(localStorage.getItem("voice_speed") ?? "1.0"));
+  const [selectedVoiceName, setSelectedVoiceName] = useState(() => localStorage.getItem("voice_name") ?? "");
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [explainOpen, setExplainOpen] = useState(false);
+
+  const reasoningSteps = useMemo(() => {
+    if (!query.data) return [];
+    const module = query.data.handledBy;
+    switch (module) {
+      case "sql":
+        return [
+          "Parsed query intent: Categorized as structured search requiring database statistics query.",
+          "Generated Text-to-SQL command mapping columns (FIR, District, Officer, status).",
+          "Executed SQL query against local Karnataka Crime Database schema.",
+          "Retrieved structured rows and calculated corresponding counts.",
+          "Generated natural language response reporting results and appended follow-up suggestions."
+        ];
+      case "rag":
+        return [
+          "Parsed query intent: Categorized as semantic textual documentation retrieval request.",
+          "Computed text embeddings on the search query.",
+          "Executed cosine similarity lookup on vector DB document segments.",
+          "Retrieved top verified RAG documents matching Karnataka census and demographics.",
+          "Synthesized context summary to answer the question exactly matching verified sources."
+        ];
+      case "analysis":
+        return [
+          "Parsed query intent: Categorized as analytics engine prediction/risk scoring.",
+          "Loaded historical crimes dataset and aggregated monthly buckets.",
+          "Computed dynamic risk score using baseline frequency, offender presence, and trend weights.",
+          "Ran time-series forecasting to plot observed vs projected values.",
+          "Compiled hotspot coordinates and generated recommendation checklist."
+        ];
+      case "caw":
+        return [
+          "Parsed query intent: Categorized as Crimes Against Women statistics inquiry.",
+          "Queried specific state-wide CAW ledger tables.",
+          "Extracted category breakdowns (Rape, Dowry Deaths, Assault).",
+          "Constructed comparative metrics for top crime districts.",
+          "Compiled safety insights and next-step recommendations."
+        ];
+      default:
+        return [
+          "Parsed query intent: General help / conversational QA request.",
+          "Routed to General LLM generator.",
+          "Matched with internal agent knowledge base.",
+          "Constructed direct response with helpful system guidelines."
+        ];
+    }
+  }, [query.data]);
+
+  // Load available system speech voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // Filter for English voices
+      setAvailableVoices(voices.filter((v) => v.lang.startsWith("en")));
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Text-to-Speech synthesis trigger when AI response completes
+  useEffect(() => {
+    if (query.data && voiceEnabled) {
+      window.speechSynthesis.cancel(); // cancel ongoing speech
+      
+      // Strip markdown syntax for natural reading voice
+      const speechText = query.data.answer
+        .replace(/\*\*/g, "")
+        .replace(/###/g, "")
+        .replace(/•/g, "-")
+        .replace(/- /g, "")
+        .slice(0, 500); // speak first 500 characters only
+
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.rate = voiceSpeed;
+
+      if (selectedVoiceName) {
+        const matched = window.speechSynthesis.getVoices().find((v) => v.name === selectedVoiceName);
+        if (matched) utterance.voice = matched;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [query.data, voiceEnabled, voiceSpeed, selectedVoiceName]);
+
+  // Speech-to-Text mic recording trigger
+  function startSpeechToText() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition is not supported in this browser. Please use Google Chrome.");
+      return;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.lang = "en-IN";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+
+    rec.onstart = () => {
+      setIsListening(true);
+      toast.info("Microphone active... Speak your query in English.");
+    };
+
+    rec.onerror = (e: any) => {
+      console.error(e);
+      setIsListening(false);
+      toast.error("Voice capture error: " + e.error);
+    };
+
+    rec.onend = () => {
+      setIsListening(false);
+    };
+
+    rec.onresult = (event: any) => {
+      const recognized = event.results[0][0].transcript;
+      setQuestion(recognized);
+      toast.success("Voice capture successful!");
+
+      // English Voice Command shortcuts
+      const cmd = recognized.toLowerCase().trim();
+      if (cmd === "submit" || cmd === "send" || cmd === "ask") {
+        query.refetch();
+      } else if (cmd === "clear" || cmd === "reset") {
+        setQuestion("");
+      } else if (cmd.includes("go to dashboard")) {
+        navigate({ to: "/dashboard" });
+      } else if (cmd.includes("go to crimes")) {
+        navigate({ to: "/crimes" });
+      } else if (cmd.includes("go to map")) {
+        navigate({ to: "/map" });
+      } else if (cmd.includes("go to timeline")) {
+        navigate({ to: "/timeline" });
+      }
+    };
+
+    rec.start();
+  }
+
+  // Generate official, professional PDF report using jsPDF (Feature 4)
   function handleDownloadPdf() {
-    window.print();
+    if (!query.data) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    const contentWidth = pageWidth - 2 * margin;
+
+    // 1. Karnataka Police Official Header Brand Banner
+    doc.setFillColor(13, 17, 23); // dark navy
+    doc.rect(0, 0, pageWidth, 40, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text("KARNATAKA STATE POLICE", margin, 18);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(180, 180, 180);
+    doc.text("CRIME INTELLIGENCE UNIT · OFFICIAL ANALYSIS REPORT", margin, 25);
+    doc.text(`Generated At: ${new Date().toLocaleString()}`, margin, 32);
+
+    // KSP Seal branding representation
+    doc.setFillColor(88, 214, 201); // accent teal
+    doc.rect(pageWidth - 35, 10, 20, 20, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(13, 17, 23);
+    doc.text("KSP", pageWidth - 32, 22);
+    doc.setFontSize(7);
+    doc.text("INTEL", pageWidth - 32, 27);
+
+    // Reset colors
+    doc.setTextColor(33, 37, 41);
+    let y = 52;
+
+    // 2. Report Document title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("CRIMESENSE AI intel INVESTIGATION DISCLOSURE", margin, y);
+    y += 8;
+
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // 3. User Query block
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.text("SEARCH QUERY INQUIRY PARAMETERS:", margin, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10.5);
+    doc.setTextColor(90, 90, 90);
+    const wrappedQuery = doc.splitTextToSize(question, contentWidth);
+    doc.text(wrappedQuery, margin, y);
+    y += wrappedQuery.length * 5.5 + 6;
+
+    // 4. Clean up Markdown Answer & format to PDF lines
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(33, 37, 41);
+    doc.setFontSize(9.5);
+    doc.text("AI CONTEXTUAL INTEL & INVESTIGATION RECOMMENDATIONS:", margin, y);
+    y += 6;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+
+    const cleanAnswer = query.data.answer
+      .replace(/\*\*/g, "")
+      .replace(/###/g, "")
+      .replace(/•/g, "-");
+
+    const wrappedAnswer = doc.splitTextToSize(cleanAnswer, contentWidth);
+    
+    wrappedAnswer.forEach((line: string) => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, margin, y);
+      y += 5.5;
+    });
+    y += 8;
+
+    // 5. Technical metrics block
+    if (query.data.metrics) {
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFillColor(245, 247, 250);
+      doc.rect(margin, y, contentWidth, 26, "F");
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(13, 17, 23);
+      doc.text("ANALYTICAL METRICS:", margin + 5, y + 7);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      
+      const entries = Object.entries(query.data.metrics).slice(0, 4);
+      let entryX = margin + 5;
+      entries.forEach(([k, v]) => {
+        doc.text(`${k.toUpperCase()}: ${v}`, entryX, y + 17);
+        entryX += 45;
+      });
+      y += 34;
+    }
+
+    // 6. Citations
+    if (query.data.citations && query.data.citations.length > 0) {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(33, 37, 41);
+      doc.text("VERIFIED PLATFORM CITATION DATABASE SOURCES:", margin, y);
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text(query.data.citations.join("  |  "), margin, y);
+    }
+
+    // Header/Footer page numbering stamp loops
+    const totalPages = doc.internal.pages.length - 1;
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      doc.setPage(pageNum);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth - 32, 287);
+      doc.text("CONFIDENTIAL & PRIVILEGED · KARNATAKA POLICE CRIME RESEARCH DEPT", margin, 287);
+    }
+
+    doc.save(`KSP_Intelligence_Report_${Date.now()}.pdf`);
+    toast.success("Professional PDF report generated and downloaded!");
   }
 
   // Badge colour per module
@@ -225,9 +533,15 @@ export function AssistantPage() {
     general:  "bg-white/10 text-muted-foreground",
   };
 
+  const toast: any = {
+    info: (msg: string) => window.dispatchEvent(new CustomEvent("sonner-toast", { detail: { type: "info", message: msg } })),
+    success: (msg: string) => window.dispatchEvent(new CustomEvent("sonner-toast", { detail: { type: "success", message: msg } })),
+    error: (msg: string) => window.dispatchEvent(new CustomEvent("sonner-toast", { detail: { type: "error", message: msg } })),
+  };
+
   return (
     <div className="space-y-4">
-      {/* ── Header (unchanged) ── */}
+      {/* Header */}
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">AI Assistant</h1>
         <p className="text-sm text-muted-foreground">
@@ -235,36 +549,132 @@ export function AssistantPage() {
         </p>
       </div>
 
-      {/* ── Query input (unchanged layout) ── */}
-      <Card className="glass border-white/10 p-5">
-        <div className="flex flex-col gap-3 md:flex-row">
+      {/* Query input card */}
+      <Card className="glass border-white/10 p-5 space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <Input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a crime intelligence question"
+            placeholder="Ask a crime intelligence question..."
             onKeyDown={(e) => e.key === "Enter" && query.refetch()}
+            className="flex-1 bg-white/5 border-white/10 text-sm"
           />
-          <Button onClick={() => query.refetch()}>Ask</Button>
+          <div className="flex items-center gap-2">
+            
+            {/* Microphone Speak button */}
+            <Button
+              type="button"
+              variant={isListening ? "destructive" : "outline"}
+              onClick={startSpeechToText}
+              className={cn("gap-1.5 min-w-[45px]", isListening && "animate-pulse")}
+            >
+              <Mic className="h-4.5 w-4.5" />
+            </Button>
+
+            {/* Voice Volume gear panel trigger */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+              className={cn("min-w-[45px]", voiceEnabled ? "text-accent border-accent/30 bg-accent/5" : "text-muted-foreground")}
+            >
+              <Volume2 className="h-4.5 w-4.5" />
+            </Button>
+
+            <Button onClick={() => query.refetch()}>Ask</Button>
+          </div>
         </div>
 
+        {/* Voice Setting configuration card */}
+        {showVoiceSettings && (
+          <div className="p-4 rounded-xl border border-white/10 bg-white/3 space-y-3 animate-fade-in text-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-foreground text-xs">Speak AI Responses</p>
+                <p className="text-[10px] text-muted-foreground">Synthesize and read out response outputs loud automatically</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={voiceEnabled}
+                onChange={(e) => {
+                  setVoiceEnabled(e.target.checked);
+                  localStorage.setItem("voice_enabled", String(e.target.checked));
+                  if (!e.target.checked) window.speechSynthesis.cancel();
+                }}
+                className="rounded border-white/10 h-4 w-4 bg-transparent accent-accent cursor-pointer"
+              />
+            </div>
+
+            {voiceEnabled && (
+              <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-white/5">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-muted-foreground">Voice Accent Selection</label>
+                  <select
+                    value={selectedVoiceName}
+                    onChange={(e) => {
+                      setSelectedVoiceName(e.target.value);
+                      localStorage.setItem("voice_name", e.target.value);
+                    }}
+                    className="flex h-8 w-full rounded border border-white/10 bg-transparent px-2 text-xs text-foreground focus-visible:outline-none"
+                  >
+                    <option value="" className="bg-card">Default System Voice</option>
+                    {availableVoices.map((v) => (
+                      <option key={v.name} value={v.name} className="bg-card text-xs">
+                        {v.name} ({v.lang})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-muted-foreground flex justify-between">
+                    <span>Voice Speed rate</span>
+                    <span className="font-semibold text-accent">{voiceSpeed}x</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value={voiceSpeed}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setVoiceSpeed(val);
+                      localStorage.setItem("voice_speed", String(val));
+                    }}
+                    className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Response area ── */}
-        <div ref={printRef} className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4 print:border-black print:bg-white print:text-black">
+        <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Thinking…</p>
+            <p className="text-sm text-muted-foreground animate-pulse">Thinking…</p>
           ) : query.data ? (
             <>
-              {/* Module badge — shows which workflow path handled the query */}
-              <div className="mb-3 flex items-center gap-2">
-                <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${moduleBadge[query.data.handledBy]}`}>
-                  {query.data.handledBy.toUpperCase()} MODULE
-                </span>
-                <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-accent">
-                  Confidence {Math.round(query.data.confidence * 100)}%
-                </span>
+              {/* Module badge */}
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${moduleBadge[query.data.handledBy]}`}>
+                    {query.data.handledBy.toUpperCase()} MODULE
+                  </span>
+                  <span className="rounded-full bg-primary/15 px-3 py-1 text-xs text-accent">
+                    Confidence {Math.round(query.data.confidence * 100)}%
+                  </span>
+                </div>
+                
+                {/* PDF generation trigger */}
+                <Button variant="outline" size="sm" onClick={handleDownloadPdf} className="text-xs gap-1.5 h-7">
+                  <FileDown className="h-3.5 w-3.5" /> PDF
+                </Button>
               </div>
 
               {/* Main answer text */}
-              <p className="text-sm text-foreground">{query.data.answer}</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{query.data.answer}</p>
 
               {/* Citations */}
               {query.data.citations.length > 0 && (
@@ -275,37 +685,94 @@ export function AssistantPage() {
                 </div>
               )}
 
-              {/* Metrics grid — Step 10 */}
+              {/* Explainable AI Collapsible Card (Feature 1) */}
+              <div className="mt-4 border-t border-white/5 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setExplainOpen(!explainOpen)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
+                >
+                  {explainOpen ? "Hide Response Explanation" : "Explain AI Response"}
+                </button>
+
+                {explainOpen && (
+                  <div className="mt-3 p-4 rounded-xl border border-white/10 bg-white/3 space-y-3.5 text-xs text-muted-foreground animate-fade-in">
+                    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase block">Data Source</span>
+                        <span className="font-semibold text-foreground mt-0.5 block">
+                          {query.data.citations?.join(", ") || "Karnataka Crime DB / Documents"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase block">Module Used</span>
+                        <span className="font-semibold text-foreground mt-0.5 block">
+                          {query.data.handledBy === "sql" ? "Text-to-SQL (Structured)" : 
+                           query.data.handledBy === "rag" ? "RAG Retrieval (Semantic)" : 
+                           query.data.handledBy === "analysis" ? "Analysis Engine (Predictive)" : 
+                           query.data.handledBy === "caw" ? "Crimes Against Women (CAW)" :
+                           "General LLM (Conversational)"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase block">Confidence Score</span>
+                        <span className="font-semibold text-foreground mt-0.5 block">
+                          {Math.round(query.data.confidence * 100)}%
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase block">Processing Time</span>
+                        <span className="font-semibold text-foreground mt-0.5 block">
+                          {query.data.processingTimeMs ?? 240} ms
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase block">Timestamp</span>
+                        <span className="font-semibold text-foreground mt-0.5 block">
+                          {query.data.timestamp ?? new Date().toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 border-t border-white/5 pt-3">
+                      <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Reasoning Steps</span>
+                      <div className="space-y-1.5 pl-3 border-l border-white/10">
+                        {reasoningSteps.map((step, idx) => (
+                          <div key={idx} className="flex gap-2 items-start text-[11px] leading-relaxed">
+                            <span className="text-accent font-bold">{idx + 1}.</span>
+                            <span>{step}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Metrics grid */}
               {query.data.metrics && <MetricsGrid metrics={query.data.metrics} />}
 
-              {/* Trend / prediction chart — Step 10 */}
+              {/* Trend / prediction chart */}
               <TrendChart data={query.data.chartData} />
 
-              {/* Hotspot map — Step 10 */}
+              {/* Hotspot map */}
               <HotspotMap points={query.data.heatmapPoints} />
 
-              {/* Network visualisation — Step 10 */}
+              {/* Network visualisation */}
               <NetworkViz data={query.data.networkData} />
-
-              {/* PDF download button — Step 10 */}
-              <div className="mt-4 flex justify-end">
-                <Button variant="outline" size="sm" onClick={handleDownloadPdf} className="text-xs">
-                  Download PDF Report
-                </Button>
-              </div>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">No answer yet.</p>
           )}
         </div>
 
-        {/* ── Suggestion pills (unchanged) ── */}
+        {/* ── Suggestion pills ── */}
         <div className="mt-4 flex flex-wrap gap-2">
           {suggestions.map((item) => (
             <button
               key={item}
               onClick={() => setQuestion(item)}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground transition hover:text-foreground"
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground transition hover:text-foreground hover:bg-white/10"
             >
               {item}
             </button>

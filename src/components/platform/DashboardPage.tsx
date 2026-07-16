@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart, Bar, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -43,6 +44,21 @@ function Sparkline({ values }: { values: number[] }) {
 
 export function DashboardPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["dashboard"], queryFn: fetchDashboard });
+
+  const evidenceStats = useMemo(() => {
+    try {
+      const stored = localStorage.getItem("ksp_evidence");
+      if (stored) {
+        const list = JSON.parse(stored);
+        const total = list.length;
+        const verified = list.filter((e: any) => e.verificationStatus === "Verified").length;
+        return { total, verified };
+      }
+    } catch (e) {
+      // ignore
+    }
+    return { total: 4, verified: 3 };
+  }, []);
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -149,10 +165,27 @@ export function DashboardPage() {
           <div className="mt-4 space-y-4">
             {data.topCrimeDistricts.slice(0, 5).map((district) => (
               <div key={district.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-foreground">{district.name}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-foreground">{district.name}</p>
+                      {district.riskLevel && (
+                        <span className={cn(
+                          "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                          district.riskLevel === "High" ? "bg-red-500/15 text-red-400 border border-red-500/10" :
+                          district.riskLevel === "Medium" ? "bg-amber-500/15 text-amber-400 border border-amber-500/10" :
+                          "bg-emerald-500/15 text-emerald-400 border border-emerald-500/10"
+                        )}>
+                          RISK: {district.riskScore} ({district.riskLevel})
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{district.hotspots} hotspots · {district.policeStations} stations</p>
+                    {district.riskReasons && district.riskReasons.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground italic leading-tight">
+                        Reason: {district.riskReasons.join(", ")}
+                      </p>
+                    )}
                   </div>
                   <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-accent">{district.crimes.toLocaleString()}</span>
                 </div>
@@ -161,6 +194,130 @@ export function DashboardPage() {
             ))}
           </div>
         </Card>
+      </div>
+
+      {/* ── Dashboard Enhancements Widgets Grid (Feature 4) ── */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        
+        {/* Active Investigations & Progress */}
+        <Card className="glass border-white/10 p-5 space-y-4">
+          <div>
+            <h3 className="font-display text-base font-semibold text-foreground">Active Investigations</h3>
+            <p className="text-xs text-muted-foreground">Ongoing case files and progress tracking</p>
+          </div>
+          <div className="space-y-3.5 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Under Investigation</span>
+              <span className="font-semibold text-foreground">{data.totals.activeCases} cases</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Solved & Closed</span>
+              <span className="font-semibold text-success">{data.totals.solvedCases} cases</span>
+            </div>
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                <span>Investigation Progress</span>
+                <span className="text-accent">{Math.round((data.totals.solvedCases / (data.totals.solvedCases + data.totals.activeCases || 1)) * 100)}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                <div 
+                  className="h-2 rounded-full bg-accent" 
+                  style={{ width: `${(data.totals.solvedCases / (data.totals.solvedCases + data.totals.activeCases || 1)) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Most Wanted Criminals */}
+        <Card className="glass border-white/10 p-5 space-y-4">
+          <div>
+            <h3 className="font-display text-base font-semibold text-foreground">Most Wanted Criminals</h3>
+            <p className="text-xs text-muted-foreground">High-priority suspect tracking</p>
+          </div>
+          <div className="space-y-2.5 text-xs">
+            {[
+              { name: "Naveen Gowda", status: "Wanted", reward: "₹50,000", alert: "Active Alert" },
+              { name: "Vikram Singh", status: "Absconding", reward: "₹25,000", alert: "Spotted border" },
+              { name: "Shekhar R.", status: "Wanted", reward: "₹10,000", alert: "Inactive" },
+            ].map((suspect) => (
+              <div key={suspect.name} className="flex items-center justify-between p-2.5 rounded-lg bg-white/3 border border-white/5">
+                <div>
+                  <span className="font-semibold text-foreground block">{suspect.name}</span>
+                  <span className="text-[10px] text-red-400 font-medium">{suspect.alert}</span>
+                </div>
+                <div className="text-right">
+                  <span className="rounded bg-destructive/15 border border-destructive/20 px-2 py-0.5 text-[10px] text-red-400 font-bold uppercase tracking-wider block">
+                    {suspect.status}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground mt-0.5 block">{suspect.reward}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Repeat Offenders & Evidence Stats */}
+        <Card className="glass border-white/10 p-5 space-y-4">
+          <div>
+            <h3 className="font-display text-base font-semibold text-foreground">Repeat Offenders & Evidence</h3>
+            <p className="text-xs text-muted-foreground">Offender profiles & file statistics</p>
+          </div>
+          <div className="space-y-3.5 text-xs">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2.5">
+              <div>
+                <span className="text-muted-foreground block">Repeat Offenders Count</span>
+                <span className="text-[10px] text-muted-foreground">From active database records</span>
+              </div>
+              <span className="font-display text-lg font-bold text-accent">{data.totals.repeatOffenders} suspects</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Evidence Statistics</span>
+              <div className="grid grid-cols-2 gap-2 text-center pt-0.5">
+                <div className="p-2 rounded bg-white/3 border border-white/5">
+                  <span className="text-[10px] text-muted-foreground block">Total Assets</span>
+                  <span className="font-semibold text-foreground text-sm">{evidenceStats.total} files</span>
+                </div>
+                <div className="p-2 rounded bg-white/3 border border-white/5">
+                  <span className="text-[10px] text-muted-foreground block">Verified</span>
+                  <span className="font-semibold text-success text-sm">{evidenceStats.verified} files</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* District Crime Ranking */}
+        <Card className="glass border-white/10 p-5 md:col-span-2 lg:col-span-3 space-y-4">
+          <div>
+            <h3 className="font-display text-base font-semibold text-foreground">District Crime Ranking</h3>
+            <p className="text-xs text-muted-foreground">Relative density index by district jurisdiction</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {data.topCrimeDistricts.slice(0, 6).map((district, idx) => (
+              <div key={district.id} className="p-3.5 rounded-xl border border-white/5 bg-white/3 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-semibold text-foreground">#{idx + 1} {district.name}</span>
+                  <span className="text-accent font-bold">{district.crimes} crimes</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[9px] text-muted-foreground uppercase">
+                    <span>Crime share</span>
+                    <span>{Math.round((district.crimes / data.totals.crimes) * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <div 
+                      className="h-1.5 rounded-full bg-accent" 
+                      style={{ width: `${(district.crimes / data.totals.crimes) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">

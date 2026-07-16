@@ -1,10 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface MapPayload {
   heatmapPoints: Array<{ lat: number; lng: number; intensity: number; district: string; category: string }>;
-  districts: Array<{ name: string; crimeCount: number; hotspotCount: number; policeStationCount: number }>;
+  districts: Array<{
+    name: string;
+    crimeCount: number;
+    hotspotCount: number;
+    policeStationCount: number;
+    riskScore?: number;
+    riskLevel?: "Low" | "Medium" | "High";
+  }>;
 }
 
 async function fetchMap(): Promise<MapPayload> {
@@ -48,8 +56,20 @@ export function CrimeMapPage() {
           <div className="mt-4 space-y-3">
             {data.districts.slice(0, 10).map((district) => (
               <div key={district.name} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <p className="font-medium text-foreground">{district.name}</p>
-                <p className="text-xs text-muted-foreground">{district.crimeCount} crimes · {district.hotspotCount} hotspots · {district.policeStationCount} stations</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-foreground">{district.name}</p>
+                  {district.riskLevel && (
+                    <span className={cn(
+                      "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                      district.riskLevel === "High" ? "bg-red-500/15 text-red-400 border border-red-500/10" :
+                      district.riskLevel === "Medium" ? "bg-amber-500/15 text-amber-400 border border-amber-500/10" :
+                      "bg-emerald-500/15 text-emerald-400 border border-emerald-500/10"
+                    )}>
+                      {district.riskScore} {district.riskLevel[0]}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{district.crimeCount} crimes · {district.hotspotCount} hotspots · {district.policeStationCount} stations</p>
               </div>
             ))}
           </div>

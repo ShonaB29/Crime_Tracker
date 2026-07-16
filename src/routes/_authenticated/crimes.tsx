@@ -14,6 +14,7 @@ function CrimesPage() {
       description="Search, filter, sort, and manage crime records from the live data store."
       queryKey="crimes"
       endpoint="/api/crimes?page=1&pageSize=20"
+      assistant
       columns={[
         { key: "caseNumber", label: "Case" },
         { key: "districtName", label: "District" },

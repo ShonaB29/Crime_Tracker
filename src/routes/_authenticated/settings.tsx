@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,15 +222,47 @@ function SecuritySection() {
 
 function AiSection() {
   const [lang, setLang] = useState<"english" | "kannada">("english");
-  const [voice, setVoice] = useState(false);
+  const [voice, setVoice] = useState(() => localStorage.getItem("voice_enabled") === "true");
+  const [voiceSpeed, setVoiceSpeed] = useState(() => Number(localStorage.getItem("voice_speed") ?? "1.0"));
+  const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("voice_name") ?? "");
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      setAvailableVoices(voices.filter((v) => v.lang.startsWith("en")));
+    };
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
   const [mode, setMode] = useState<"short" | "detailed">("detailed");
   const [creativity, setCreativity] = useState([65]);
   const [showSql, setShowSql] = useState(true);
   const [reasoning, setReasoning] = useState(true);
   const [predictive, setPredictive] = useState(true);
 
+  const handleVoiceToggle = (checked: boolean) => {
+    setVoice(checked);
+    localStorage.setItem("voice_enabled", String(checked));
+    if (!checked) window.speechSynthesis.cancel();
+  };
+
+  const handleVoiceSpeedChange = (values: number[]) => {
+    const val = values[0];
+    setVoiceSpeed(val);
+    localStorage.setItem("voice_speed", String(val));
+  };
+
+  const handleVoiceNameChange = (name: string) => {
+    setSelectedVoice(name);
+    localStorage.setItem("voice_name", name);
+  };
+
   return (
-    <div>
+    <div className="space-y-4">
       <SectionTitle icon={Bot} title="AI Assistant Settings" description="Customise how the AI assistant responds to your queries." />
 
       <FieldRow label="Preferred Language" hint="Language for AI responses">
@@ -240,8 +272,34 @@ function AiSection() {
         />
       </FieldRow>
       <FieldRow label="Voice Assistant" hint="Enable spoken AI responses">
-        <Switch checked={voice} onCheckedChange={setVoice} />
+        <Switch checked={voice} onCheckedChange={handleVoiceToggle} />
       </FieldRow>
+
+      {voice && (
+        <>
+          <FieldRow label="Voice Selection" hint="Choose accent for spoken AI answers">
+            <select
+              value={selectedVoice}
+              onChange={(e) => handleVoiceNameChange(e.target.value)}
+              className="flex h-8 w-48 rounded-md border border-white/10 bg-transparent px-2 text-xs text-foreground focus-visible:outline-none"
+            >
+              <option value="" className="bg-card">Default System Voice</option>
+              {availableVoices.map((v) => (
+                <option key={v.name} value={v.name} className="bg-card">
+                  {v.name} ({v.lang})
+                </option>
+              ))}
+            </select>
+          </FieldRow>
+
+          <FieldRow label="Voice Speed" hint={`Currently: ${voiceSpeed}x`}>
+            <div className="w-36">
+              <Slider min={0.5} max={2.0} step={0.1} value={[voiceSpeed]} onValueChange={handleVoiceSpeedChange} />
+            </div>
+          </FieldRow>
+        </>
+      )}
+
       <FieldRow label="Response Mode" hint="Controls answer length and depth">
         <RadioGroup
           options={[{ value: "short", label: "Short" }, { value: "detailed", label: "Detailed" }]}

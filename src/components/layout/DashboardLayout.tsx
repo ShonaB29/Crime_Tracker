@@ -16,11 +16,14 @@ import {
   LogOut,
   Menu,
   X,
+  History,
+  FolderOpen,
 } from "lucide-react";
 
 import { useAuth, ROLE_LABELS, type AppRole } from "@/hooks/useAuth";
 import kspEmblem from "@/assets/ksp-emblem.png";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "@/components/platform/NotificationCenter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +45,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Crimes", to: "/crimes", icon: ShieldAlert },
   { label: "FIR Records", to: "/fir", icon: FileText },
+  { label: "Evidence Management", to: "/evidence", icon: FolderOpen },
+  { label: "Criminal Timeline", to: "/timeline", icon: History },
   { label: "Districts", to: "/districts", icon: Building2 },
   { label: "Crime Map", to: "/map", icon: Map },
   { label: "AI Intelligence", to: "/ai", icon: Brain, roles: ["admin", "analyst"] },
@@ -148,36 +153,40 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 rounded-full border border-white/10 bg-card/60 py-1 pl-1 pr-3 transition-colors hover:bg-card">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {initials}
-                </span>
-                <span className="hidden text-left sm:block">
-                  <span className="block text-sm font-medium leading-tight text-foreground">
-                    {profile?.full_name ?? "Officer"}
+          <div className="flex items-center gap-3.5">
+            <NotificationCenter />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 rounded-full border border-white/10 bg-card/60 py-1 pl-1 pr-3 transition-colors hover:bg-card">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {initials}
                   </span>
-                  <span className="block text-[11px] leading-tight text-muted-foreground">
-                    {roles.map((r) => ROLE_LABELS[r]).join(", ") || "No role"}
+                  <span className="hidden text-left sm:block">
+                    <span className="block text-sm font-medium leading-tight text-foreground">
+                      {profile?.full_name ?? "Officer"}
+                    </span>
+                    <span className="block text-[11px] leading-tight text-muted-foreground">
+                      {roles.map((r) => ROLE_LABELS[r]).join(", ") || "No role"}
+                    </span>
                   </span>
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <p className="text-sm font-medium">{profile?.full_name}</p>
-                <p className="text-xs text-muted-foreground">{profile?.email}</p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
-                <Settings className="mr-2 h-4 w-4" /> Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="text-danger focus:text-danger">
-                <LogOut className="mr-2 h-4 w-4" /> Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <p className="text-sm font-medium">{profile?.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
+                  <Settings className="mr-2 h-4 w-4" /> Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="text-danger focus:text-danger">
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <main className="p-4 sm:p-6">{children}</main>
