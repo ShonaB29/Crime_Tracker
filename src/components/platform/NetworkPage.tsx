@@ -17,20 +17,34 @@ async function fetchNetwork(): Promise<NetworkPayload> {
 export function NetworkPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["network"], queryFn: fetchNetwork });
 
-  if (isLoading) return <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Loading network graph...</Card>;
-  if (error || !data) return <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Network graph unavailable.</Card>;
+  if (isLoading)
+    return (
+      <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+        Loading network graph...
+      </Card>
+    );
+  if (error || !data)
+    return (
+      <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+        Network graph unavailable.
+      </Card>
+    );
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">Network Analysis</h1>
-        <p className="text-sm text-muted-foreground">Neo4j-style relationships between criminals, victims, FIRs, stations, and districts.</p>
+        <p className="text-sm text-muted-foreground">
+          Neo4j-style relationships between criminals, victims, FIRs, stations, and districts.
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {data.highlights.map((item) => (
           <Card key={item.label} className="glass border-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{item.label}</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+              {item.label}
+            </p>
             <p className="mt-2 font-display text-3xl font-bold text-foreground">{item.value}</p>
           </Card>
         ))}
@@ -42,7 +56,9 @@ export function NetworkPage() {
           {data.nodes.slice(0, 18).map((node) => (
             <div key={node.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm font-medium text-foreground">{node.label}</p>
-              <p className="text-xs text-muted-foreground">{node.type} · {node.district ?? "global"}</p>
+              <p className="text-xs text-muted-foreground">
+                {node.type} · {node.district ?? "global"}
+              </p>
             </div>
           ))}
         </div>
@@ -52,11 +68,16 @@ export function NetworkPage() {
         <h2 className="font-display text-lg font-semibold text-foreground">Relationships</h2>
         <div className="mt-4 space-y-2 text-sm text-muted-foreground">
           {data.edges.slice(0, 20).map((edge, index) => (
-            <div key={`${edge.source}-${edge.target}-${index}`} className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <div
+              key={`${edge.source}-${edge.target}-${index}`}
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            >
               <span className="text-foreground">{edge.source}</span>
               <span>→</span>
               <span className="text-foreground">{edge.target}</span>
-              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-accent">{edge.label}</span>
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-accent">
+                {edge.label}
+              </span>
               <span className="text-xs">weight {edge.weight}</span>
             </div>
           ))}

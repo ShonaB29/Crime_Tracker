@@ -67,7 +67,8 @@ export const Route = createFileRoute("/api/$")({
         if (resource === "crimes") {
           if (id) {
             const crime = getCrime(id);
-            if (!crime) return Response.json({ message: "Crime record not found" }, { status: 404 });
+            if (!crime)
+              return Response.json({ message: "Crime record not found" }, { status: 404 });
             return Response.json(crime);
           }
 
@@ -143,7 +144,7 @@ export const Route = createFileRoute("/api/$")({
         // Routes through IntentRouter → Text-to-SQL | RAG | AnalysisEngine → LLM Response
         if (resource === "ai-assistant") {
           const question = url.searchParams.get("question") ?? "";
-          return Response.json(getHybridAssistantResponse(question));
+          return Response.json(await getHybridAssistantResponse(question));
         }
 
         if (resource === "reports") {
@@ -154,19 +155,24 @@ export const Route = createFileRoute("/api/$")({
           if (format === "csv") {
             if (type === "crimes") {
               const { items } = listCrimes({ page: 1, pageSize: 10000 });
-              return new Response(toCsv(items.map((crime) => ({
-                id: crime.id,
-                caseNumber: crime.caseNumber,
-                district: crime.districtName,
-                category: crime.category,
-                crimeType: crime.crimeType,
-                status: crime.status,
-                severity: crime.severity,
-                officer: crime.investigationOfficer,
-                crimeTime: crime.crimeTime,
-              }))), {
-                headers: { "Content-Type": "text/csv; charset=utf-8" },
-              });
+              return new Response(
+                toCsv(
+                  items.map((crime) => ({
+                    id: crime.id,
+                    caseNumber: crime.caseNumber,
+                    district: crime.districtName,
+                    category: crime.category,
+                    crimeType: crime.crimeType,
+                    status: crime.status,
+                    severity: crime.severity,
+                    officer: crime.investigationOfficer,
+                    crimeTime: crime.crimeTime,
+                  })),
+                ),
+                {
+                  headers: { "Content-Type": "text/csv; charset=utf-8" },
+                },
+              );
             }
 
             return new Response(toCsv(summary.reports), {
@@ -189,7 +195,11 @@ export const Route = createFileRoute("/api/$")({
         }
 
         if (resource === "health") {
-          return Response.json({ ok: true, service: "ksp-crime-platform", time: new Date().toISOString() });
+          return Response.json({
+            ok: true,
+            service: "ksp-crime-platform",
+            time: new Date().toISOString(),
+          });
         }
 
         return Response.json({ message: "Not found" }, { status: 404 });
@@ -210,7 +220,8 @@ export const Route = createFileRoute("/api/$")({
 
         if (resource === "crimes" && id) {
           const updated = updateCrime(id, body);
-          if (!updated) return Response.json({ message: "Crime record not found" }, { status: 404 });
+          if (!updated)
+            return Response.json({ message: "Crime record not found" }, { status: 404 });
           return Response.json(updated);
         }
 
@@ -228,7 +239,8 @@ export const Route = createFileRoute("/api/$")({
 
         if (resource === "crimes" && id) {
           const updated = updateCrime(id, body);
-          if (!updated) return Response.json({ message: "Crime record not found" }, { status: 404 });
+          if (!updated)
+            return Response.json({ message: "Crime record not found" }, { status: 404 });
           return Response.json(updated);
         }
 
@@ -245,7 +257,8 @@ export const Route = createFileRoute("/api/$")({
 
         if (resource === "crimes" && id) {
           const removed = deleteCrime(id);
-          if (!removed) return Response.json({ message: "Crime record not found" }, { status: 404 });
+          if (!removed)
+            return Response.json({ message: "Crime record not found" }, { status: 404 });
           return Response.json({ ok: true });
         }
 

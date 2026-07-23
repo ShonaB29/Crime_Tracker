@@ -59,7 +59,8 @@ function buildCorpus(): Array<{ source: string; content: string }> {
   for (const r of cawRecords) {
     docs.push({
       source: `CAW-${r.district}-${r.year}`,
-      content: `Crimes Against Women report for ${r.district} district, Karnataka, year ${r.year}. ` +
+      content:
+        `Crimes Against Women report for ${r.district} district, Karnataka, year ${r.year}. ` +
         `Total CAW cases: ${r.total_caw}. ` +
         `Rape: ${r.rape} cases. ` +
         `Kidnapping and abduction of women: ${r.kidnapping_abduction} cases. ` +
@@ -77,14 +78,17 @@ function buildCorpus(): Array<{ source: string; content: string }> {
   const stateTotals = getCawStateTotals(latestYear);
   docs.push({
     source: `CAW-Karnataka-${latestYear}-StateSummary`,
-    content: `Karnataka State Crimes Against Women Summary for ${latestYear}. ` +
+    content:
+      `Karnataka State Crimes Against Women Summary for ${latestYear}. ` +
       `Total CAW cases across all 31 districts: ${stateTotals.total_caw.toLocaleString()}. ` +
       `Rape cases: ${stateTotals.rape.toLocaleString()}. ` +
       `Dowry deaths: ${stateTotals.dowry_deaths.toLocaleString()}. ` +
       `Cruelty by husband (domestic violence): ${stateTotals.cruelty_by_husband.toLocaleString()}. ` +
       `Assault on women: ${stateTotals.assault_on_women.toLocaleString()}. ` +
       `Kidnapping and abduction: ${stateTotals.kidnapping_abduction.toLocaleString()}. ` +
-      `Top affected districts: ${getTopCawDistricts(latestYear, 5).map((d) => d.district).join(", ")}. ` +
+      `Top affected districts: ${getTopCawDistricts(latestYear, 5)
+        .map((d) => d.district)
+        .join(", ")}. ` +
       `Source: NCRB Crimes Against Women in India 2001-2021 dataset.`,
   });
 
@@ -92,7 +96,8 @@ function buildCorpus(): Array<{ source: string; content: string }> {
   for (const dist of districts) {
     docs.push({
       source: `Census-${dist.name}-2011`,
-      content: `Census 2011 Demographic profile for ${dist.name} district, Karnataka. ` +
+      content:
+        `Census 2011 Demographic profile for ${dist.name} district, Karnataka. ` +
         `Total population: ${dist.population.toLocaleString()}. ` +
         `Area: ${dist.areaSqKm.toLocaleString()} sq km. ` +
         `Population density: ${dist.density} per sq km. ` +
@@ -108,7 +113,8 @@ function buildCorpus(): Array<{ source: string; content: string }> {
   for (const r of annualRecords) {
     docs.push({
       source: `Annual-${r.district}-${r.year}-${r.crime_head}`,
-      content: `NCRB Crime in India annual statistics for ${r.district} district, Karnataka, year ${r.year}. ` +
+      content:
+        `NCRB Crime in India annual statistics for ${r.district} district, Karnataka, year ${r.year}. ` +
         `Crime head: ${r.crime_head} (${r.crime_group}). ` +
         `Cases reported: ${r.cases_reported}. ` +
         `Cases chargesheeted: ${r.cases_reported}. ` +
@@ -127,14 +133,29 @@ function buildCorpus(): Array<{ source: string; content: string }> {
 // ── Similarity scoring ─────────────────────────────────────────────────────────
 
 function similarityScore(content: string, query: string): number {
-  const stopWords = new Set(["the", "and", "for", "are", "was", "with", "from", "that", "this", "here", "they", "them", "about", "these"]);
+  const stopWords = new Set([
+    "the",
+    "and",
+    "for",
+    "are",
+    "was",
+    "with",
+    "from",
+    "that",
+    "this",
+    "here",
+    "they",
+    "them",
+    "about",
+    "these",
+  ]);
   const queryWords = query
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter((w) => w.length >= 3 && !stopWords.has(w));
-  
+
   if (queryWords.length === 0) return 0;
-  
+
   const contentLower = content.toLowerCase();
   const matches = queryWords.filter((w) => contentLower.includes(w)).length;
   return matches / queryWords.length;

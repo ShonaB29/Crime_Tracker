@@ -7,7 +7,7 @@ import { getData, HybridAssistantResponse } from "../crime-platform.server";
 export function generateInvestigationRecommendations(
   question: string,
   handledBy: string,
-  tableRows?: any[]
+  tableRows?: any[],
 ): string {
   const { crimes, accused, districts } = getData();
   const lowerQ = question.toLowerCase();
@@ -29,7 +29,15 @@ export function generateInvestigationRecommendations(
 
   // 2. Identify Crime Category/Type Context
   let category = "";
-  const categories = ["violent crime", "property crime", "economic offence", "cyber", "narcotics", "caw", "women"];
+  const categories = [
+    "violent crime",
+    "property crime",
+    "economic offence",
+    "cyber",
+    "narcotics",
+    "caw",
+    "women",
+  ];
   for (const cat of categories) {
     if (lowerQ.includes(cat)) {
       category = cat;
@@ -64,7 +72,9 @@ export function generateInvestigationRecommendations(
     .filter((a) => {
       if (a.repeatOffender && a.status === "Active") {
         if (districtName) {
-          const district = districts.find((d) => d.name.toLowerCase() === districtName.toLowerCase());
+          const district = districts.find(
+            (d) => d.name.toLowerCase() === districtName.toLowerCase(),
+          );
           return district ? a.districtId === district.id : true;
         }
         return true;
@@ -91,15 +101,21 @@ export function generateInvestigationRecommendations(
   ];
 
   if (category.includes("property") || category.includes("theft")) {
-    evidenceList = "CCTV footage of nearby junctions, fingerprints from entry points, pawn shop purchase records.";
+    evidenceList =
+      "CCTV footage of nearby junctions, fingerprints from entry points, pawn shop purchase records.";
     patrolSuggestions = `Conduct targeted night patrolling near high-density residential limits and jewelry stores in ${districtName}.`;
     steps = [
       `Distribute suspect warning sheets and pictures to local scrap dealer and gold merchant networks.`,
       `Audit pawn shop transactions in the matching police station limits.`,
       `Correlate alibis of active repeat property offenders with matching MO profiles in the area.`,
     ];
-  } else if (category.includes("cyber") || category.includes("economic") || category.includes("fraud")) {
-    evidenceList = "IP access logs, SMTP email headers, bank transaction mirror receipts, mirror copy of digital device.";
+  } else if (
+    category.includes("cyber") ||
+    category.includes("economic") ||
+    category.includes("fraud")
+  ) {
+    evidenceList =
+      "IP access logs, SMTP email headers, bank transaction mirror receipts, mirror copy of digital device.";
     patrolSuggestions = `Establish public cyber vigilance notices and security alerts in technology parks.`;
     steps = [
       `Initiate bank account lien/freeze commands on suspect beneficiary accounts with bank partners.`,
@@ -107,7 +123,8 @@ export function generateInvestigationRecommendations(
       `Engage cyber forensic cell analysts to dissect the phishing scripts or suspect malware.`,
     ];
   } else if (category.includes("caw") || category.includes("women") || category.includes("rape")) {
-    evidenceList = "Victim statement under Sec 164 CrPC, medical examination report, social media chat transcripts.";
+    evidenceList =
+      "Victim statement under Sec 164 CrPC, medical examination report, social media chat transcripts.";
     patrolSuggestions = `Increase evening foot patrols near educational institutions, parks, and bus terminals in ${districtName}.`;
     steps = [
       `Retrieve and secure all chat histories and call logs between victim and suspect.`,
@@ -115,7 +132,8 @@ export function generateInvestigationRecommendations(
       `Arrange counseling and legal support via the SCRB women support protection cells.`,
     ];
   } else if (category.includes("narcotics")) {
-    evidenceList = "Field drug kit chemical verification records, certified forensic test report, transit logistics cargo invoices.";
+    evidenceList =
+      "Field drug kit chemical verification records, certified forensic test report, transit logistics cargo invoices.";
     patrolSuggestions = `Increase surprise vehicle checking operations on inter-district border checkposts in ${districtName}.`;
     steps = [
       `Investigate forward and backward supply chains to trace local buyers and bulk suppliers.`,
@@ -147,10 +165,10 @@ export function generateInvestigationRecommendations(
  */
 export function enrichAssistantResponseWithRecommendations(
   response: HybridAssistantResponse,
-  question: string
+  question: string,
 ): HybridAssistantResponse {
   if (!response || !response.answer) return response;
-  
+
   // Prevent double recommendations
   if (response.answer.includes("AI Investigation Recommendations")) {
     return response;
@@ -159,7 +177,7 @@ export function enrichAssistantResponseWithRecommendations(
   const recommendations = generateInvestigationRecommendations(
     question,
     response.handledBy,
-    response.tableRows
+    response.tableRows,
   );
 
   return {

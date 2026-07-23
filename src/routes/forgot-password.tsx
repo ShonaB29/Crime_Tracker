@@ -62,7 +62,12 @@ function ForgotPasswordPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fp-email">Official email</Label>
-            <Input id="fp-email" type="email" placeholder="officer@ksp.gov.in" {...register("email")} />
+            <Input
+              id="fp-email"
+              type="email"
+              placeholder="officer@ksp.gov.in"
+              {...register("email")}
+            />
             {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={isSubmitting}>

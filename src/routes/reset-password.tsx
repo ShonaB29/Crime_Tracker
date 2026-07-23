@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { resetPasswordSchema, passwordStrength, type ResetPasswordValues } from "@/lib/auth-schemas";
+import {
+  resetPasswordSchema,
+  passwordStrength,
+  type ResetPasswordValues,
+} from "@/lib/auth-schemas";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +70,12 @@ function ResetPasswordPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="rp-password">New password</Label>
-            <Input id="rp-password" type="password" placeholder="••••••••" {...register("password")} />
+            <Input
+              id="rp-password"
+              type="password"
+              placeholder="••••••••"
+              {...register("password")}
+            />
             {pw && (
               <div className="flex h-1.5 gap-1">
                 {[0, 1, 2, 3].map((i) => (

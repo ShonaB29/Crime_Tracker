@@ -1,5 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Bell, Search, CheckCircle, AlertTriangle, ShieldAlert, BadgeInfo, Eye } from "lucide-react";
+import {
+  Bell,
+  Search,
+  CheckCircle,
+  AlertTriangle,
+  ShieldAlert,
+  BadgeInfo,
+  Eye,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +26,8 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
   {
     id: "notif-1",
     title: "High Crime Risk Warning",
-    description: "Dharwad district risk score increased to 82. Patrol frequency elevation recommended.",
+    description:
+      "Dharwad district risk score increased to 82. Patrol frequency elevation recommended.",
     timestamp: "10 mins ago",
     priority: "High",
     category: "risk",
@@ -100,10 +109,10 @@ export function NotificationCenter() {
   // Filtered notifications
   const filtered = useMemo(() => {
     return notifications.filter((n) => {
-      const matchSearch = 
+      const matchSearch =
         n.title.toLowerCase().includes(search.toLowerCase()) ||
         n.description.toLowerCase().includes(search.toLowerCase());
-      
+
       const matchPriority = priorityFilter === "All" || n.priority === priorityFilter;
 
       return matchSearch && matchPriority;
@@ -127,19 +136,27 @@ export function NotificationCenter() {
 
   const getPriorityColor = (p: SystemNotification["priority"]) => {
     switch (p) {
-      case "High": return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "Medium": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-      case "Low": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "High":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+      case "Medium":
+        return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+      case "Low":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     }
   };
 
   const getCategoryIcon = (cat: SystemNotification["category"]) => {
     switch (cat) {
-      case "risk": return <AlertTriangle className="h-4 w-4 text-red-400" />;
-      case "fir": return <ShieldAlert className="h-4 w-4 text-accent" />;
-      case "investigation": return <Eye className="h-4 w-4 text-amber-400" />;
-      case "case": return <ShieldAlert className="h-4 w-4 text-red-400" />;
-      default: return <BadgeInfo className="h-4 w-4 text-blue-400" />;
+      case "risk":
+        return <AlertTriangle className="h-4 w-4 text-red-400" />;
+      case "fir":
+        return <ShieldAlert className="h-4 w-4 text-accent" />;
+      case "investigation":
+        return <Eye className="h-4 w-4 text-amber-400" />;
+      case "case":
+        return <ShieldAlert className="h-4 w-4 text-red-400" />;
+      default:
+        return <BadgeInfo className="h-4 w-4 text-blue-400" />;
     }
   };
 
@@ -164,7 +181,9 @@ export function NotificationCenter() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-white/3">
             <div className="flex items-center gap-2">
-              <span className="font-display font-bold text-foreground text-sm uppercase tracking-wider">Alert Center</span>
+              <span className="font-display font-bold text-foreground text-sm uppercase tracking-wider">
+                Alert Center
+              </span>
               {unreadCount > 0 && (
                 <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent">
                   {unreadCount} Unread
@@ -201,7 +220,7 @@ export function NotificationCenter() {
                     "rounded px-2.5 py-1 text-[10px] font-semibold border transition-all uppercase tracking-wider",
                     priorityFilter === filter
                       ? "bg-accent/15 border-accent/30 text-accent"
-                      : "bg-white/3 border-white/5 text-muted-foreground hover:bg-white/5"
+                      : "bg-white/3 border-white/5 text-muted-foreground hover:bg-white/5",
                   )}
                 >
                   {filter}
@@ -223,7 +242,9 @@ export function NotificationCenter() {
                   onClick={() => handleMarkAsRead(n.id)}
                   className={cn(
                     "p-3.5 transition-colors cursor-pointer flex gap-3 relative",
-                    n.read ? "bg-transparent hover:bg-white/2" : "bg-primary/5 hover:bg-primary/8 border-l-2 border-l-accent"
+                    n.read
+                      ? "bg-transparent hover:bg-white/2"
+                      : "bg-primary/5 hover:bg-primary/8 border-l-2 border-l-accent",
                   )}
                 >
                   {/* Category icon */}
@@ -233,12 +254,21 @@ export function NotificationCenter() {
 
                   <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex justify-between items-start gap-2">
-                      <span className="font-semibold text-foreground text-xs leading-snug">{n.title}</span>
-                      <span className="text-[9px] text-muted-foreground shrink-0 mt-0.5">{n.timestamp}</span>
+                      <span className="font-semibold text-foreground text-xs leading-snug">
+                        {n.title}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground shrink-0 mt-0.5">
+                        {n.timestamp}
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-normal">{n.description}</p>
                     <div className="flex items-center gap-2 pt-1">
-                      <span className={cn("rounded border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider", getPriorityColor(n.priority))}>
+                      <span
+                        className={cn(
+                          "rounded border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider",
+                          getPriorityColor(n.priority),
+                        )}
+                      >
                         {n.priority}
                       </span>
                     </div>

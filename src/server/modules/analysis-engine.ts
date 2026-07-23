@@ -27,27 +27,55 @@ import {
   getCawRecords,
 } from "./caw-data";
 
-export interface TrendPoint   { month: string; observed: number; projected: number }
-export interface CawTrendPoint { year: number; value: number }
-export interface HotspotPoint { district: string; lat: number; lng: number; score: number; crimeCount: number }
-export interface NetworkNode  { id: string; label: string; type: string; value: number }
-export interface NetworkEdge  { source: string; target: string; label: string; weight: number }
-export interface RiskScore    { district: string; score: number; trend: number }
+export interface TrendPoint {
+  month: string;
+  observed: number;
+  projected: number;
+}
+export interface CawTrendPoint {
+  year: number;
+  value: number;
+}
+export interface HotspotPoint {
+  district: string;
+  lat: number;
+  lng: number;
+  score: number;
+  crimeCount: number;
+}
+export interface NetworkNode {
+  id: string;
+  label: string;
+  type: string;
+  value: number;
+}
+export interface NetworkEdge {
+  source: string;
+  target: string;
+  label: string;
+  weight: number;
+}
+export interface RiskScore {
+  district: string;
+  score: number;
+  trend: number;
+}
 
 /** Model validation metrics produced by the 80/20 train-test split */
 export interface ModelValidation {
   trainSize: number;
   testSize: number;
-  mae: number;        // Mean Absolute Error
-  rmse: number;       // Root Mean Squared Error
-  r2: number;         // R² coefficient of determination (0–1)
-  mape: number;       // Mean Absolute Percentage Error (%)
+  mae: number; // Mean Absolute Error
+  rmse: number; // Root Mean Squared Error
+  r2: number; // R² coefficient of determination (0–1)
+  mape: number; // Mean Absolute Percentage Error (%)
 }
 
 export interface AnalysisResult {
   type: "trend" | "hotspot" | "network" | "prediction" | "caw" | "correlation";
   insight: string;
-  chartData?: TrendPoint[] | HotspotPoint[] | RiskScore[] | CawTrendPoint[] | Record<string, unknown>[];
+  chartData?:
+    TrendPoint[] | HotspotPoint[] | RiskScore[] | CawTrendPoint[] | Record<string, unknown>[];
   networkData?: { nodes: NetworkNode[]; edges: NetworkEdge[] };
   metrics: Record<string, string | number>;
   /** Model validation — only present for prediction type */
@@ -55,7 +83,13 @@ export interface AnalysisResult {
   /** CAW category breakdown for bar chart */
   cawBreakdown?: Array<{ category: string; count: number }>;
   /** Top districts for CAW heatmap */
-  cawHotspots?: Array<{ district: string; lat: number; lng: number; total_caw: number; score: number }>;
+  cawHotspots?: Array<{
+    district: string;
+    lat: number;
+    lng: number;
+    total_caw: number;
+    score: number;
+  }>;
 }
 
 // ── CAW Analysis ───────────────────────────────────────────────────────────────
@@ -72,16 +106,29 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
   // Determine which sub-category to highlight based on query
   let focusCategory = "total_caw";
   let focusLabel = "Total Crimes Against Women";
-  if (normalisedQuery.includes("rape"))                                    { focusCategory = "rape";               focusLabel = "Rape"; }
-  else if (normalisedQuery.includes("dowry"))                              { focusCategory = "dowry_deaths";       focusLabel = "Dowry Deaths"; }
-  else if (normalisedQuery.includes("cruelty") || normalisedQuery.includes("domestic") || normalisedQuery.includes("husband")) {
-    focusCategory = "cruelty_by_husband"; focusLabel = "Cruelty by Husband / Domestic Violence";
-  }
-  else if (normalisedQuery.includes("kidnap") || normalisedQuery.includes("abduction") || normalisedQuery.includes("trafficking")) {
-    focusCategory = "kidnapping_abduction"; focusLabel = "Kidnapping & Abduction";
-  }
-  else if (normalisedQuery.includes("assault") || normalisedQuery.includes("molestation")) {
-    focusCategory = "assault_on_women"; focusLabel = "Assault on Women";
+  if (normalisedQuery.includes("rape")) {
+    focusCategory = "rape";
+    focusLabel = "Rape";
+  } else if (normalisedQuery.includes("dowry")) {
+    focusCategory = "dowry_deaths";
+    focusLabel = "Dowry Deaths";
+  } else if (
+    normalisedQuery.includes("cruelty") ||
+    normalisedQuery.includes("domestic") ||
+    normalisedQuery.includes("husband")
+  ) {
+    focusCategory = "cruelty_by_husband";
+    focusLabel = "Cruelty by Husband / Domestic Violence";
+  } else if (
+    normalisedQuery.includes("kidnap") ||
+    normalisedQuery.includes("abduction") ||
+    normalisedQuery.includes("trafficking")
+  ) {
+    focusCategory = "kidnapping_abduction";
+    focusLabel = "Kidnapping & Abduction";
+  } else if (normalisedQuery.includes("assault") || normalisedQuery.includes("molestation")) {
+    focusCategory = "assault_on_women";
+    focusLabel = "Assault on Women";
   }
 
   // Focused trend
@@ -89,14 +136,14 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
 
   // Category breakdown for latest year (bar chart)
   const cawBreakdown = [
-    { category: "Rape",                    count: stateTotals.rape },
-    { category: "Kidnapping & Abduction",  count: stateTotals.kidnapping_abduction },
-    { category: "Dowry Deaths",            count: stateTotals.dowry_deaths },
-    { category: "Assault on Women",        count: stateTotals.assault_on_women },
-    { category: "Insult to Modesty",       count: stateTotals.insult_to_modesty },
-    { category: "Cruelty by Husband",      count: stateTotals.cruelty_by_husband },
-    { category: "Immoral Trafficking",     count: stateTotals.immoral_traffic },
-    { category: "Dowry Prohibition",       count: stateTotals.dowry_prohibition },
+    { category: "Rape", count: stateTotals.rape },
+    { category: "Kidnapping & Abduction", count: stateTotals.kidnapping_abduction },
+    { category: "Dowry Deaths", count: stateTotals.dowry_deaths },
+    { category: "Assault on Women", count: stateTotals.assault_on_women },
+    { category: "Insult to Modesty", count: stateTotals.insult_to_modesty },
+    { category: "Cruelty by Husband", count: stateTotals.cruelty_by_husband },
+    { category: "Immoral Trafficking", count: stateTotals.immoral_traffic },
+    { category: "Dowry Prohibition", count: stateTotals.dowry_prohibition },
   ].sort((a, b) => b.count - a.count);
 
   // Hotspot data for map
@@ -105,7 +152,10 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
     lat: coords[d.district]?.lat ?? 15.0,
     lng: coords[d.district]?.lng ?? 75.5,
     total_caw: d.total_caw,
-    score: Math.min(99, Math.round((d.total_caw / stateTotals.total_caw) * 100 * topDistricts.length * 0.8)),
+    score: Math.min(
+      99,
+      Math.round((d.total_caw / stateTotals.total_caw) * 100 * topDistricts.length * 0.8),
+    ),
   }));
 
   // Year-over-year change
@@ -115,7 +165,8 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
   const direction = yoyChange > 0 ? "increased" : "decreased";
 
   const topDistrict = topDistricts[0];
-  const focusValue = (stateTotals as Record<string, number>)[focusCategory] ?? stateTotals.total_caw;
+  const focusValue =
+    (stateTotals as Record<string, number>)[focusCategory] ?? stateTotals.total_caw;
 
   const insight =
     `Crimes Against Women in Karnataka (${latestYear}): ` +
@@ -136,15 +187,15 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
     cawBreakdown,
     cawHotspots,
     metrics: {
-      totalCaw:          stateTotals.total_caw.toLocaleString(),
-      rape:              stateTotals.rape.toLocaleString(),
-      dowryDeaths:       stateTotals.dowry_deaths.toLocaleString(),
-      crueltyByHusband:  stateTotals.cruelty_by_husband.toLocaleString(),
-      assaultOnWomen:    stateTotals.assault_on_women.toLocaleString(),
-      kidnapping:        stateTotals.kidnapping_abduction.toLocaleString(),
-      topDistrict:       topDistrict.district,
-      year:              latestYear,
-      yoyChange:         `${yoyChange > 0 ? "+" : ""}${yoyPct}%`,
+      totalCaw: stateTotals.total_caw.toLocaleString(),
+      rape: stateTotals.rape.toLocaleString(),
+      dowryDeaths: stateTotals.dowry_deaths.toLocaleString(),
+      crueltyByHusband: stateTotals.cruelty_by_husband.toLocaleString(),
+      assaultOnWomen: stateTotals.assault_on_women.toLocaleString(),
+      kidnapping: stateTotals.kidnapping_abduction.toLocaleString(),
+      topDistrict: topDistrict.district,
+      year: latestYear,
+      yoyChange: `${yoyChange > 0 ? "+" : ""}${yoyPct}%`,
     },
   };
 }
@@ -154,7 +205,7 @@ function analyseCaw(normalisedQuery: string): AnalysisResult {
 function analyseTrend(): AnalysisResult {
   const analytics = getAnalyticsSummary();
   const latest = analytics.predictionGraph.slice(-3);
-  const avgObserved  = Math.round(latest.reduce((s, p) => s + p.observed, 0) / latest.length);
+  const avgObserved = Math.round(latest.reduce((s, p) => s + p.observed, 0) / latest.length);
   const avgProjected = Math.round(latest.reduce((s, p) => s + p.projected, 0) / latest.length);
   const direction = avgProjected > avgObserved ? "upward" : "downward";
 
@@ -175,13 +226,21 @@ function analyseTrend(): AnalysisResult {
 
 function analyseHotspots(): AnalysisResult {
   const districts = getDistrictSummaries();
-  const dashboard  = getDashboardSummary();
+  const dashboard = getDashboardSummary();
   const totalCrimes = districts.reduce((s, d) => s + d.crimeCount, 0);
 
   const hotspots: HotspotPoint[] = districts
     .map((d) => ({
-      district: d.name, lat: d.latitude, lng: d.longitude, crimeCount: d.crimeCount,
-      score: Math.min(99, Math.round((d.crimeCount / totalCrimes) * 100 * districts.length * 0.6 + d.hotspotCount * 1.5)),
+      district: d.name,
+      lat: d.latitude,
+      lng: d.longitude,
+      crimeCount: d.crimeCount,
+      score: Math.min(
+        99,
+        Math.round(
+          (d.crimeCount / totalCrimes) * 100 * districts.length * 0.6 + d.hotspotCount * 1.5,
+        ),
+      ),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
@@ -191,7 +250,12 @@ function analyseHotspots(): AnalysisResult {
     type: "hotspot",
     insight: `Hotspot analysis identified ${hotspots.length} high-risk zones. Highest-risk district: ${top.district} (score: ${top.score}) with ${top.crimeCount} crimes. Heatmap covers ${dashboard.heatmapPoints.length} geo-tagged incidents.`,
     chartData: hotspots,
-    metrics: { topDistrict: top.district, topScore: top.score, hotspotsCovered: hotspots.length, heatmapPoints: dashboard.heatmapPoints.length },
+    metrics: {
+      topDistrict: top.district,
+      topScore: top.score,
+      hotspotsCovered: hotspots.length,
+      heatmapPoints: dashboard.heatmapPoints.length,
+    },
   };
 }
 
@@ -207,7 +271,8 @@ function analyseNetwork(): AnalysisResult {
     insight: `Criminal network analysis found ${network.nodes.length} entities and ${network.edges.length} relationships. Top connected entity: ${topCriminal?.label ?? "N/A"}. Repeat offenders: ${network.highlights.find((h) => h.label === "Repeat offenders")?.value ?? 0}.`,
     networkData: { nodes: network.nodes as NetworkNode[], edges: network.edges as NetworkEdge[] },
     metrics: {
-      totalNodes: network.nodes.length, totalEdges: network.edges.length,
+      totalNodes: network.nodes.length,
+      totalEdges: network.edges.length,
       repeatOffenders: network.highlights.find((h) => h.label === "Repeat offenders")?.value ?? 0,
       topEntity: topCriminal?.label ?? "N/A",
     },
@@ -245,23 +310,29 @@ export function evaluateModel(
   const n = testY.length;
   const predicted = testY.map((_, i) => intercept + slope * (trainSize + i));
 
-  const mae  = predicted.reduce((s, p, i) => s + Math.abs(p - testY[i]), 0) / n;
-  const mse  = predicted.reduce((s, p, i) => s + (p - testY[i]) ** 2, 0) / n;
+  const mae = predicted.reduce((s, p, i) => s + Math.abs(p - testY[i]), 0) / n;
+  const mse = predicted.reduce((s, p, i) => s + (p - testY[i]) ** 2, 0) / n;
   const rmse = Math.sqrt(mse);
 
   const yMean = testY.reduce((s, v) => s + v, 0) / n;
   const ssTot = testY.reduce((s, v) => s + (v - yMean) ** 2, 0);
   const ssRes = predicted.reduce((s, p, i) => s + (p - testY[i]) ** 2, 0);
-  const r2    = ssTot === 0 ? 1 : Math.max(0, 1 - ssRes / ssTot);
+  const r2 = ssTot === 0 ? 1 : Math.max(0, 1 - ssRes / ssTot);
 
-  const mape  = predicted.reduce((s, p, i) => s + (testY[i] === 0 ? 0 : Math.abs((p - testY[i]) / testY[i])), 0) / n * 100;
+  const mape =
+    (predicted.reduce(
+      (s, p, i) => s + (testY[i] === 0 ? 0 : Math.abs((p - testY[i]) / testY[i])),
+      0,
+    ) /
+      n) *
+    100;
 
   return {
     trainSize,
     testSize: n,
-    mae:  Math.round(mae  * 100) / 100,
+    mae: Math.round(mae * 100) / 100,
     rmse: Math.round(rmse * 100) / 100,
-    r2:   Math.round(r2   * 1000) / 1000,
+    r2: Math.round(r2 * 1000) / 1000,
     mape: Math.round(mape * 100) / 100,
   };
 }
@@ -273,9 +344,9 @@ function analysePrediction(): AnalysisResult {
   const series = analytics.predictionGraph;
 
   // ── 80 / 20 train-test split ──────────────────────────────────────────────
-  const splitIdx  = Math.floor(series.length * 0.8);          // e.g. 9 of 12
-  const trainY    = series.slice(0, splitIdx).map((p) => p.observed);
-  const testY     = series.slice(splitIdx).map((p) => p.observed);
+  const splitIdx = Math.floor(series.length * 0.8); // e.g. 9 of 12
+  const trainY = series.slice(0, splitIdx).map((p) => p.observed);
+  const testY = series.slice(splitIdx).map((p) => p.observed);
 
   const { slope, intercept } = fitLinearRegression(trainY);
   const validation = evaluateModel(testY, slope, intercept, splitIdx);
@@ -298,21 +369,24 @@ function analysePrediction(): AnalysisResult {
       `at ${Math.abs(Math.round(slope))} crimes/month. ` +
       `Next month projection: ${nextMonthProjection} crimes. ` +
       `Model accuracy — MAE: ${validation.mae}, RMSE: ${validation.rmse}, R²: ${validation.r2}. ` +
-      `Top risk districts: ${analytics.riskScores.slice(0, 3).map((r) => r.district).join(", ")}.`,
+      `Top risk districts: ${analytics.riskScores
+        .slice(0, 3)
+        .map((r) => r.district)
+        .join(", ")}.`,
     chartData: extended,
     validation,
     metrics: {
-      slope:              Math.round(slope),
-      intercept:          Math.round(intercept),
+      slope: Math.round(slope),
+      intercept: Math.round(intercept),
       nextMonthProjection,
       direction,
-      trainSamples:       validation.trainSize,
-      testSamples:        validation.testSize,
-      mae:                validation.mae,
-      rmse:               validation.rmse,
-      r2:                 validation.r2,
-      mape:               `${validation.mape}%`,
-      topRiskDistrict:    analytics.riskScores[0]?.district ?? "N/A",
+      trainSamples: validation.trainSize,
+      testSamples: validation.testSize,
+      mae: validation.mae,
+      rmse: validation.rmse,
+      r2: validation.r2,
+      mape: `${validation.mape}%`,
+      topRiskDistrict: analytics.riskScores[0]?.district ?? "N/A",
     },
   };
 }
@@ -332,14 +406,21 @@ function analyseCorrelation(normalisedQuery: string): AnalysisResult {
     yLabel = "Crime Rate (per 1,000 population)";
     xVal = (d: DistrictRecord) => d.literacyRate;
     yVal = (d: DistrictRecord) => Math.round((d.crimeCount / d.population) * 1000 * 10) / 10;
-  } else if (normalisedQuery.includes("gender") || normalisedQuery.includes("sex") || normalisedQuery.includes("women") || normalisedQuery.includes("ratio")) {
+  } else if (
+    normalisedQuery.includes("gender") ||
+    normalisedQuery.includes("sex") ||
+    normalisedQuery.includes("women") ||
+    normalisedQuery.includes("ratio")
+  ) {
     xLabel = "Gender Ratio (Females per 1,000 Males)";
     yLabel = "Crimes Against Women (CAW)";
     xVal = (d: DistrictRecord) => d.genderRatio;
-    
+
     const cawRecords = getCawRecords();
     yVal = (d: DistrictRecord) => {
-      const rec = cawRecords.find((r) => r.district.toLowerCase() === d.name.toLowerCase() && r.year === 2021);
+      const rec = cawRecords.find(
+        (r) => r.district.toLowerCase() === d.name.toLowerCase() && r.year === 2021,
+      );
       return rec ? rec.total_caw : 0;
     };
   }
@@ -355,7 +436,8 @@ function analyseCorrelation(normalisedQuery: string): AnalysisResult {
   }));
 
   const direction = correlation > 0 ? "positive" : "negative";
-  const strength = Math.abs(correlation) > 0.7 ? "strong" : Math.abs(correlation) > 0.4 ? "moderate" : "weak";
+  const strength =
+    Math.abs(correlation) > 0.7 ? "strong" : Math.abs(correlation) > 0.4 ? "moderate" : "weak";
 
   return {
     type: "correlation",
@@ -387,14 +469,20 @@ function pearsonCorrelation(X: number[], Y: number[]): number {
 
 export function runAnalysis(
   type: "trend" | "hotspot" | "network" | "prediction" | "caw" | "correlation",
-  normalisedQuery = ""
+  normalisedQuery = "",
 ): AnalysisResult {
   switch (type) {
-    case "caw":         return analyseCaw(normalisedQuery);
-    case "hotspot":     return analyseHotspots();
-    case "network":     return analyseNetwork();
-    case "prediction":  return analysePrediction();
-    case "correlation": return analyseCorrelation(normalisedQuery);
-    default:            return analyseTrend();
+    case "caw":
+      return analyseCaw(normalisedQuery);
+    case "hotspot":
+      return analyseHotspots();
+    case "network":
+      return analyseNetwork();
+    case "prediction":
+      return analysePrediction();
+    case "correlation":
+      return analyseCorrelation(normalisedQuery);
+    default:
+      return analyseTrend();
   }
 }

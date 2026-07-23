@@ -2,9 +2,18 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { 
-  History, Calendar, User, Search, ShieldAlert, 
-  Lock, FileText, Scale, BadgeAlert, KeyRound, Unlock
+import {
+  History,
+  Calendar,
+  User,
+  Search,
+  ShieldAlert,
+  Lock,
+  FileText,
+  Scale,
+  BadgeAlert,
+  KeyRound,
+  Unlock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,13 +46,17 @@ async function fetchTimelines(): Promise<CriminalProfile[]> {
 }
 
 export function CriminalTimelinePage() {
-  const { data: profiles = [], isLoading, error } = useQuery({
+  const {
+    data: profiles = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["timelines"],
     queryFn: fetchTimelines,
   });
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  
+
   // Filter states
   const [searchName, setSearchName] = useState("");
   const [filterFir, setFilterFir] = useState("");
@@ -89,7 +102,7 @@ export function CriminalTimelinePage() {
       if (searchName && !p.name.toLowerCase().includes(searchName.toLowerCase())) {
         return false;
       }
-      
+
       // 2. Timeline filter checks (FIR, Crime Type, Year)
       if (filterFir || filterCrimeType || filterYear) {
         const matchesTimeline = p.timeline.some((e) => {
@@ -157,11 +170,19 @@ export function CriminalTimelinePage() {
   };
 
   if (isLoading) {
-    return <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Loading criminal profiles...</Card>;
+    return (
+      <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+        Loading criminal profiles...
+      </Card>
+    );
   }
 
   if (error) {
-    return <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Unable to load timeline records.</Card>;
+    return (
+      <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+        Unable to load timeline records.
+      </Card>
+    );
   }
 
   return (
@@ -169,7 +190,9 @@ export function CriminalTimelinePage() {
       {/* Title */}
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">Criminal Timeline</h1>
-        <p className="text-sm text-muted-foreground">Track dynamic criminal records, history timelines, court trials, and status updates.</p>
+        <p className="text-sm text-muted-foreground">
+          Track dynamic criminal records, history timelines, court trials, and status updates.
+        </p>
       </div>
 
       {/* Filter Controls Panel */}
@@ -195,9 +218,13 @@ export function CriminalTimelinePage() {
               onChange={(e) => setFilterFir(e.target.value)}
               className="flex h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1 text-sm text-foreground focus-visible:outline-none"
             >
-              <option value="" className="bg-card">All FIRs</option>
+              <option value="" className="bg-card">
+                All FIRs
+              </option>
               {allFirs.map((fir) => (
-                <option key={fir} value={fir} className="bg-card">{fir}</option>
+                <option key={fir} value={fir} className="bg-card">
+                  {fir}
+                </option>
               ))}
             </select>
           </div>
@@ -209,9 +236,13 @@ export function CriminalTimelinePage() {
               onChange={(e) => setFilterCrimeType(e.target.value)}
               className="flex h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1 text-sm text-foreground focus-visible:outline-none"
             >
-              <option value="" className="bg-card">All Types</option>
+              <option value="" className="bg-card">
+                All Types
+              </option>
               {allCrimeTypes.map((type) => (
-                <option key={type} value={type} className="bg-card">{type}</option>
+                <option key={type} value={type} className="bg-card">
+                  {type}
+                </option>
               ))}
             </select>
           </div>
@@ -223,9 +254,13 @@ export function CriminalTimelinePage() {
               onChange={(e) => setFilterYear(e.target.value)}
               className="flex h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1 text-sm text-foreground focus-visible:outline-none"
             >
-              <option value="" className="bg-card">All Years</option>
+              <option value="" className="bg-card">
+                All Years
+              </option>
               {allYears.map((year) => (
-                <option key={year} value={year} className="bg-card">{year}</option>
+                <option key={year} value={year} className="bg-card">
+                  {year}
+                </option>
               ))}
             </select>
           </div>
@@ -241,7 +276,6 @@ export function CriminalTimelinePage() {
 
       {/* Main Content Layout */}
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        
         {/* Criminals Sidebar */}
         <Card className="glass border-white/10 p-5 space-y-4 max-h-[600px] overflow-y-auto">
           <h2 className="font-display text-sm uppercase tracking-widest text-muted-foreground font-semibold">
@@ -259,7 +293,7 @@ export function CriminalTimelinePage() {
                     "w-full text-left rounded-xl border p-3 transition-all",
                     selectedProfile?.id === p.id
                       ? "border-accent bg-primary/10 shadow-md"
-                      : "border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5"
+                      : "border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5",
                   )}
                 >
                   <div className="flex justify-between items-start">
@@ -285,27 +319,42 @@ export function CriminalTimelinePage() {
         {/* Selected Criminal Timeline Detail */}
         {selectedProfile ? (
           <div className="space-y-6">
-            
             {/* Criminal Information Header Card */}
             <Card className="glass border-white/10 p-5">
               <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <User className="h-5 w-5 text-accent" />
-                    <h2 className="font-display text-xl font-bold text-foreground">{selectedProfile.name}</h2>
+                    <h2 className="font-display text-xl font-bold text-foreground">
+                      {selectedProfile.name}
+                    </h2>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Accused ID: <span className="font-semibold text-foreground">{selectedProfile.id}</span> · Status: <span className="font-semibold text-foreground">{selectedProfile.status}</span>
+                    Accused ID:{" "}
+                    <span className="font-semibold text-foreground">{selectedProfile.id}</span> ·
+                    Status:{" "}
+                    <span className="font-semibold text-foreground">{selectedProfile.status}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Modus Operandi: <span className="italic text-foreground">{selectedProfile.modusOperandi}</span>
+                    Modus Operandi:{" "}
+                    <span className="italic text-foreground">{selectedProfile.modusOperandi}</span>
                   </p>
                 </div>
                 <div className="text-left sm:text-right space-y-1">
                   <p className="text-xs text-muted-foreground">Demographics</p>
-                  <p className="text-sm font-medium text-foreground">Age {selectedProfile.age} · {selectedProfile.gender}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Age {selectedProfile.age} · {selectedProfile.gender}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Risk classification: <span className={cn("font-bold", selectedProfile.repeatOffender ? "text-red-400" : "text-amber-400")}>{selectedProfile.repeatOffender ? "High (Repeat)" : "Medium"}</span>
+                    Risk classification:{" "}
+                    <span
+                      className={cn(
+                        "font-bold",
+                        selectedProfile.repeatOffender ? "text-red-400" : "text-amber-400",
+                      )}
+                    >
+                      {selectedProfile.repeatOffender ? "High (Repeat)" : "Medium"}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -321,10 +370,12 @@ export function CriminalTimelinePage() {
                 {selectedProfile.timeline.map((event) => (
                   <div key={event.id} className="relative group">
                     {/* Event Circle Anchor */}
-                    <div className={cn(
-                      "absolute -left-[38px] top-1 flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-transform group-hover:scale-110",
-                      getEventColor(event.type)
-                    )}>
+                    <div
+                      className={cn(
+                        "absolute -left-[38px] top-1 flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-transform group-hover:scale-110",
+                        getEventColor(event.type),
+                      )}
+                    >
                       {getEventIcon(event.type)}
                     </div>
 
@@ -332,14 +383,25 @@ export function CriminalTimelinePage() {
                     <div className="rounded-xl border border-white/10 bg-white/3 p-4 hover:border-white/20 hover:bg-white/5 transition-all">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 mb-2">
                         <span className="text-[11px] font-bold text-accent uppercase tracking-widest flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          <Calendar className="h-3 w-3" />{" "}
+                          {new Date(event.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </span>
                         <span className="text-xs font-semibold text-muted-foreground">
-                          {event.firNumber !== "N/A" ? `FIR: ${event.firNumber}` : `Crime Type: ${event.crimeType}`}
+                          {event.firNumber !== "N/A"
+                            ? `FIR: ${event.firNumber}`
+                            : `Crime Type: ${event.crimeType}`}
                         </span>
                       </div>
-                      <h4 className="font-display text-sm font-semibold text-foreground mb-1">{event.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-normal">{event.description}</p>
+                      <h4 className="font-display text-sm font-semibold text-foreground mb-1">
+                        {event.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground leading-normal">
+                        {event.description}
+                      </p>
                     </div>
                   </div>
                 ))}

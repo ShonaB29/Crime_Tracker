@@ -1,6 +1,8 @@
-export type CrimeStatus = "Open" | "Under Investigation" | "Solved" | "Pending Forensic" | "Filed In Court";
+export type CrimeStatus =
+  "Open" | "Under Investigation" | "Solved" | "Pending Forensic" | "Filed In Court";
 export type ArrestStatus = "Not Arrested" | "Arrested" | "Wanted" | "Bail Granted";
-export type CourtStatus = "Not Filed" | "Charge Sheet Filed" | "Trial Pending" | "Convicted" | "Acquitted";
+export type CourtStatus =
+  "Not Filed" | "Charge Sheet Filed" | "Trial Pending" | "Convicted" | "Acquitted";
 
 export interface DistrictRecord {
   id: string;
@@ -148,14 +150,25 @@ export interface DashboardSummary {
     riskLevel?: "Low" | "Medium" | "High";
     riskReasons?: string[];
   }>;
-  heatmapPoints: Array<{ lat: number; lng: number; intensity: number; district: string; category: string }>;
+  heatmapPoints: Array<{
+    lat: number;
+    lng: number;
+    intensity: number;
+    district: string;
+    category: string;
+  }>;
   kpis: Array<{ label: string; value: string; hint: string }>;
 }
 
 export interface AnalyticsSummary {
   barSeries: Array<{ label: string; crimes: number; firs: number }>;
   pieSeries: Array<{ name: string; value: number }>;
-  lineSeries: Array<{ month: string; crimeCount: number; solvedCount: number; pendingCount: number }>;
+  lineSeries: Array<{
+    month: string;
+    crimeCount: number;
+    solvedCount: number;
+    pendingCount: number;
+  }>;
   yearlyTrend: Array<{ year: number; crimes: number; solved: number }>;
   districtComparison: Array<{ name: string; crimes: number; solved: number; pending: number }>;
   categoryDistribution: Array<{ name: string; value: number }>;
@@ -233,19 +246,96 @@ const CRIME_CATEGORIES = [
   { name: "Property Crime", types: ["Theft", "Burglary", "Vehicle Theft", "Robbery"] },
   { name: "Violent Crime", types: ["Assault", "Murder", "Kidnapping", "Domestic Violence"] },
   { name: "Economic Offence", types: ["Fraud", "Forgery", "Cheating", "Extortion"] },
-  { name: "Cyber Crime", types: ["Phishing", "Digital Fraud", "Identity Theft", "Online Harassment"] },
+  {
+    name: "Cyber Crime",
+    types: ["Phishing", "Digital Fraud", "Identity Theft", "Online Harassment"],
+  },
   { name: "Public Order", types: ["Rioting", "Arson", "Illegal Gathering", "Threats"] },
-  { name: "Organized Crime", types: ["Narcotics", "Smuggling", "Gang Assault", "Human Trafficking"] },
+  {
+    name: "Organized Crime",
+    types: ["Narcotics", "Smuggling", "Gang Assault", "Human Trafficking"],
+  },
 ];
 
-const WEAPONS = ["Knife", "Firearm", "Blunt Object", "Vehicle", "Poison", "No Weapon", "Sharp Weapon", "Other"];
-const CRIME_STATUSES: CrimeStatus[] = ["Open", "Under Investigation", "Solved", "Pending Forensic", "Filed In Court"];
+const WEAPONS = [
+  "Knife",
+  "Firearm",
+  "Blunt Object",
+  "Vehicle",
+  "Poison",
+  "No Weapon",
+  "Sharp Weapon",
+  "Other",
+];
+const CRIME_STATUSES: CrimeStatus[] = [
+  "Open",
+  "Under Investigation",
+  "Solved",
+  "Pending Forensic",
+  "Filed In Court",
+];
 const ARREST_STATUSES: ArrestStatus[] = ["Not Arrested", "Arrested", "Wanted", "Bail Granted"];
-const COURT_STATUSES: CourtStatus[] = ["Not Filed", "Charge Sheet Filed", "Trial Pending", "Convicted", "Acquitted"];
-const FIR_STATUSES: FirRecord["status"][] = ["Registered", "Investigating", "Charge Sheet Filed", "Closed"];
+const COURT_STATUSES: CourtStatus[] = [
+  "Not Filed",
+  "Charge Sheet Filed",
+  "Trial Pending",
+  "Convicted",
+  "Acquitted",
+];
+const FIR_STATUSES: FirRecord["status"][] = [
+  "Registered",
+  "Investigating",
+  "Charge Sheet Filed",
+  "Closed",
+];
 const GENDERS: Array<VictimRecord["gender"]> = ["Male", "Female", "Other"];
-const FIRST_NAMES = ["Aakash", "Akash", "Ananya", "Arjun", "Bhavana", "Chetan", "Deepa", "Farhan", "Gowri", "Harish", "Iqbal", "Jayanth", "Keerthi", "Lakshmi", "Manjunath", "Nandini", "Omkar", "Pooja", "Pradeep", "Rashmi", "Sahana", "Sanjay", "Sneha", "Tejas", "Uma", "Varun", "Yash", "Zubair"];
-const LAST_NAMES = ["Acharya", "Bhat", "Gowda", "Hegde", "Iyer", "Joshi", "Kumar", "Nayak", "Patil", "Rao", "Sharma", "Shetty", "Singh", "Srinivas", "Yadav"];
+const FIRST_NAMES = [
+  "Aakash",
+  "Akash",
+  "Ananya",
+  "Arjun",
+  "Bhavana",
+  "Chetan",
+  "Deepa",
+  "Farhan",
+  "Gowri",
+  "Harish",
+  "Iqbal",
+  "Jayanth",
+  "Keerthi",
+  "Lakshmi",
+  "Manjunath",
+  "Nandini",
+  "Omkar",
+  "Pooja",
+  "Pradeep",
+  "Rashmi",
+  "Sahana",
+  "Sanjay",
+  "Sneha",
+  "Tejas",
+  "Uma",
+  "Varun",
+  "Yash",
+  "Zubair",
+];
+const LAST_NAMES = [
+  "Acharya",
+  "Bhat",
+  "Gowda",
+  "Hegde",
+  "Iyer",
+  "Joshi",
+  "Kumar",
+  "Nayak",
+  "Patil",
+  "Rao",
+  "Sharma",
+  "Shetty",
+  "Singh",
+  "Srinivas",
+  "Yadav",
+];
 const OFFICER_RANKS = ["Constable", "Head Constable", "ASI", "SI", "Inspector", "DSP", "ACP"];
 const MODUS_OPERANDI = [
   "Night-time burglary",
@@ -311,11 +401,36 @@ function addDays(date: Date, days: number) {
 
 function buildDistricts(random: () => number): DistrictRecord[] {
   const grid = [
-    [15.0, 75.6], [15.6, 76.9], [15.2, 74.5], [13.3, 77.0], [12.98, 77.59], [16.9, 77.5],
-    [11.8, 77.2], [13.5, 77.6], [13.2, 75.8], [13.8, 76.5], [12.9, 74.85], [14.45, 75.9],
-    [15.46, 75.0], [15.42, 75.62], [13.0, 76.1], [14.79, 75.40], [17.33, 76.82], [12.42, 75.74],
-    [13.14, 78.13], [15.35, 76.15], [12.52, 76.9], [12.30, 76.64], [16.20, 77.36], [12.72, 77.28],
-    [13.93, 75.56], [13.34, 77.10], [13.34, 74.74], [14.80, 74.13], [16.83, 75.72], [16.77, 77.14],
+    [15.0, 75.6],
+    [15.6, 76.9],
+    [15.2, 74.5],
+    [13.3, 77.0],
+    [12.98, 77.59],
+    [16.9, 77.5],
+    [11.8, 77.2],
+    [13.5, 77.6],
+    [13.2, 75.8],
+    [13.8, 76.5],
+    [12.9, 74.85],
+    [14.45, 75.9],
+    [15.46, 75.0],
+    [15.42, 75.62],
+    [13.0, 76.1],
+    [14.79, 75.4],
+    [17.33, 76.82],
+    [12.42, 75.74],
+    [13.14, 78.13],
+    [15.35, 76.15],
+    [12.52, 76.9],
+    [12.3, 76.64],
+    [16.2, 77.36],
+    [12.72, 77.28],
+    [13.93, 75.56],
+    [13.34, 77.1],
+    [13.34, 74.74],
+    [14.8, 74.13],
+    [16.83, 75.72],
+    [16.77, 77.14],
     [15.33, 76.52],
   ];
 
@@ -367,7 +482,10 @@ function buildDistricts(random: () => number): DistrictRecord[] {
   });
 }
 
-function buildPoliceStations(districts: DistrictRecord[], random: () => number): PoliceStationRecord[] {
+function buildPoliceStations(
+  districts: DistrictRecord[],
+  random: () => number,
+): PoliceStationRecord[] {
   const stations: PoliceStationRecord[] = [];
   const total = 100;
   for (let index = 0; index < total; index += 1) {
@@ -388,7 +506,11 @@ function buildPoliceStations(districts: DistrictRecord[], random: () => number):
   return stations;
 }
 
-function buildVictims(districts: DistrictRecord[], stations: PoliceStationRecord[], random: () => number): VictimRecord[] {
+function buildVictims(
+  districts: DistrictRecord[],
+  stations: PoliceStationRecord[],
+  random: () => number,
+): VictimRecord[] {
   const victims: VictimRecord[] = [];
   for (let index = 0; index < 2400; index += 1) {
     const district = districts[index % districts.length];
@@ -419,13 +541,19 @@ function buildAccused(districts: DistrictRecord[], random: () => number): Accuse
       districtId: district.id,
       repeatOffender,
       modusOperandi: choice(MODUS_OPERANDI, random),
-      status: repeatOffender ? choice(["Wanted", "Arrested", "Charged"], random) : choice(["Active", "Arrested", "Charged"], random),
+      status: repeatOffender
+        ? choice(["Wanted", "Arrested", "Charged"], random)
+        : choice(["Active", "Arrested", "Charged"], random),
     });
   }
   return accused;
 }
 
-function buildFirs(districts: DistrictRecord[], stations: PoliceStationRecord[], random: () => number): FirRecord[] {
+function buildFirs(
+  districts: DistrictRecord[],
+  stations: PoliceStationRecord[],
+  random: () => number,
+): FirRecord[] {
   const firs: FirRecord[] = [];
   const now = new Date();
   for (let index = 0; index < 5000; index += 1) {
@@ -444,7 +572,19 @@ function buildFirs(districts: DistrictRecord[], stations: PoliceStationRecord[],
       status: choice(FIR_STATUSES, random),
       dateFiled: formatDate(filedDate),
       caseDetails: `${choice(CRIME_CATEGORIES, random).name} related FIR with ${choice(MODUS_OPERANDI, random).toLowerCase()} pattern.`,
-      section: choice(["IPC 302", "IPC 376", "IPC 420", "IPC 379", "IT Act 66D", "NDPS 20(b)", "IPC 354", "IPC 307"], random),
+      section: choice(
+        [
+          "IPC 302",
+          "IPC 376",
+          "IPC 420",
+          "IPC 379",
+          "IT Act 66D",
+          "NDPS 20(b)",
+          "IPC 354",
+          "IPC 307",
+        ],
+        random,
+      ),
     });
   }
   return firs;
@@ -468,7 +608,10 @@ function buildCrimes(
     const victim = victims[(index * 17) % victims.length];
     const accusedPerson = accused[(index * 19) % accused.length];
     const fir = firs[index % firs.length];
-    const severity = choice(["Low", "Medium", "High", "Critical"] as CrimeRecord["severity"][], random);
+    const severity = choice(
+      ["Low", "Medium", "High", "Critical"] as CrimeRecord["severity"][],
+      random,
+    );
     const status = choice(CRIME_STATUSES, random);
     const crimeDate = addDays(now, -Math.floor(random() * 1000));
     const solved = status === "Solved" || status === "Filed In Court";
@@ -492,8 +635,12 @@ function buildCrimes(
       longitude: district.longitude + (random() - 0.5) * 0.3,
       weapon: choice(WEAPONS, random),
       investigationOfficer: choice(INVESTIGATION_OFFICERS, random),
-      arrestStatus: solved ? choice(["Arrested", "Bail Granted"], random) : choice(ARREST_STATUSES, random),
-      courtStatus: solved ? choice(["Charge Sheet Filed", "Trial Pending", "Convicted"], random) : choice(COURT_STATUSES, random),
+      arrestStatus: solved
+        ? choice(["Arrested", "Bail Granted"], random)
+        : choice(ARREST_STATUSES, random),
+      courtStatus: solved
+        ? choice(["Charge Sheet Filed", "Trial Pending", "Convicted"], random)
+        : choice(COURT_STATUSES, random),
       repeatOffender: accusedPerson.repeatOffender || random() > 0.88,
       modusOperandi: accusedPerson.modusOperandi,
       victimId: victim.id,
@@ -531,10 +678,17 @@ function monthKey(isoDate: string) {
 
 function monthLabel(key: string) {
   const [year, month] = key.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+    month: "short",
+    year: "2-digit",
+  });
 }
 
-function sortRecords<T extends Record<string, unknown>>(records: T[], sortBy: keyof T | undefined, sortDir: "asc" | "desc" | undefined) {
+function sortRecords<T extends Record<string, unknown>>(
+  records: T[],
+  sortBy: keyof T | undefined,
+  sortDir: "asc" | "desc" | undefined,
+) {
   if (!sortBy) return records;
   const direction = sortDir === "asc" ? 1 : -1;
   return [...records].sort((left, right) => {
@@ -563,7 +717,12 @@ export function listCrimes(query: CrimeQuery = {}) {
   const { crimes } = getData();
   const search = query.search?.trim() ?? "";
   const filtered = crimes.filter((crime) => {
-    if (query.district && crime.districtId !== query.district && crime.districtName !== query.district) return false;
+    if (
+      query.district &&
+      crime.districtId !== query.district &&
+      crime.districtName !== query.district
+    )
+      return false;
     if (query.category && crime.category !== query.category) return false;
     if (query.status && crime.status !== query.status) return false;
     if (query.severity && crime.severity !== query.severity) return false;
@@ -584,7 +743,11 @@ export function listCrimes(query: CrimeQuery = {}) {
     ].some((value) => matchesSearch(value, search));
   });
 
-  const sorted = sortRecords(filtered as unknown as Record<string, unknown>[], query.sortBy as string | undefined, query.sortDir) as unknown as CrimeRecord[];
+  const sorted = sortRecords(
+    filtered as unknown as Record<string, unknown>[],
+    query.sortBy as string | undefined,
+    query.sortDir,
+  ) as unknown as CrimeRecord[];
   const pageSize = query.pageSize ?? 20;
   const page = query.page ?? 1;
   return {
@@ -599,13 +762,20 @@ export function listCrimes(query: CrimeQuery = {}) {
 }
 
 export function getCrime(id: string) {
-  return getData().crimes.find((crime) => crime.id === id || crime.caseNumber === id || crime.firId === id);
+  return getData().crimes.find(
+    (crime) => crime.id === id || crime.caseNumber === id || crime.firId === id,
+  );
 }
 
 export function createCrime(input: Partial<CrimeRecord>) {
   const data = getData();
-  const district = data.districts.find((entry) => entry.id === input.districtId || entry.name === input.districtName) ?? data.districts[0];
-  const station = data.policeStations.find((entry) => entry.id === input.policeStationId) ?? data.policeStations[0];
+  const district =
+    data.districts.find(
+      (entry) => entry.id === input.districtId || entry.name === input.districtName,
+    ) ?? data.districts[0];
+  const station =
+    data.policeStations.find((entry) => entry.id === input.policeStationId) ??
+    data.policeStations[0];
   const victim = data.victims[0];
   const accused = data.accused[0];
   const fir = data.firs[0];
@@ -667,13 +837,20 @@ export function listFirs(query: FirQuery = {}) {
   const { firs } = getData();
   const search = query.search?.trim() ?? "";
   const filtered = firs.filter((fir) => {
-    if (query.district && fir.districtId !== query.district && fir.districtName !== query.district) return false;
+    if (query.district && fir.districtId !== query.district && fir.districtName !== query.district)
+      return false;
     if (query.status && fir.status !== query.status) return false;
     if (query.officer && !matchesSearch(fir.officer, query.officer)) return false;
     if (!search) return true;
-    return [fir.firNumber, fir.caseDetails, fir.section, fir.policeStationName, fir.districtName, fir.officer, fir.status].some((value) =>
-      matchesSearch(value, search),
-    );
+    return [
+      fir.firNumber,
+      fir.caseDetails,
+      fir.section,
+      fir.policeStationName,
+      fir.districtName,
+      fir.officer,
+      fir.status,
+    ].some((value) => matchesSearch(value, search));
   });
 
   const sorted = [...filtered].sort((left, right) => right.dateFiled.localeCompare(left.dateFiled));
@@ -706,13 +883,16 @@ function districtCrimeStats() {
   const mappedDistricts = districts.map((district) => {
     const districtCrimes = crimes.filter((crime) => crime.districtId === district.id);
     const districtFirs = firs.filter((fir) => fir.districtId === district.id);
-    const hotspots = districtCrimes.filter((crime) => crime.severity === "Critical" || crime.repeatOffender).length;
+    const hotspots = districtCrimes.filter(
+      (crime) => crime.severity === "Critical" || crime.repeatOffender,
+    ).length;
     return {
       ...district,
       crimeCount: districtCrimes.length,
       firCount: districtFirs.length,
       hotspotCount: Math.max(district.hotspotCount, hotspots),
-      policeStationCount: policeStations.filter((station) => station.districtId === district.id).length,
+      policeStationCount: policeStations.filter((station) => station.districtId === district.id)
+        .length,
     };
   });
 
@@ -731,40 +911,72 @@ function districtCrimeStats() {
 export function getDashboardSummary(): DashboardSummary {
   const { crimes, firs, victims, accused, policeStations } = getData();
   const districts = districtCrimeStats();
-  const solvedCases = crimes.filter((crime) => crime.status === "Solved" || crime.status === "Filed In Court").length;
-  const activeCases = crimes.filter((crime) => crime.status === "Open" || crime.status === "Under Investigation" || crime.status === "Pending Forensic").length;
-  const pendingCases = crimes.filter((crime) => crime.status !== "Solved" && crime.status !== "Filed In Court").length;
+  const solvedCases = crimes.filter(
+    (crime) => crime.status === "Solved" || crime.status === "Filed In Court",
+  ).length;
+  const activeCases = crimes.filter(
+    (crime) =>
+      crime.status === "Open" ||
+      crime.status === "Under Investigation" ||
+      crime.status === "Pending Forensic",
+  ).length;
+  const pendingCases = crimes.filter(
+    (crime) => crime.status !== "Solved" && crime.status !== "Filed In Court",
+  ).length;
   const repeatOffenders = crimes.filter((crime) => crime.repeatOffender).length;
 
   const monthlyBuckets = new Map<string, { crimes: number; firs: number }>();
   crimes.forEach((crime) => {
     const key = monthKey(crime.crimeTime);
-    monthlyBuckets.set(key, { crimes: (monthlyBuckets.get(key)?.crimes ?? 0) + 1, firs: monthlyBuckets.get(key)?.firs ?? 0 });
+    monthlyBuckets.set(key, {
+      crimes: (monthlyBuckets.get(key)?.crimes ?? 0) + 1,
+      firs: monthlyBuckets.get(key)?.firs ?? 0,
+    });
   });
   firs.forEach((fir) => {
     const key = monthKey(fir.dateFiled);
-    monthlyBuckets.set(key, { crimes: monthlyBuckets.get(key)?.crimes ?? 0, firs: (monthlyBuckets.get(key)?.firs ?? 0) + 1 });
+    monthlyBuckets.set(key, {
+      crimes: monthlyBuckets.get(key)?.crimes ?? 0,
+      firs: (monthlyBuckets.get(key)?.firs ?? 0) + 1,
+    });
   });
   const monthlyTrends = [...monthlyBuckets.entries()]
     .sort((left, right) => left[0].localeCompare(right[0]))
     .slice(-12)
-    .map(([month, value]) => ({ month: monthLabel(month), crimes: value.crimes, firs: value.firs }));
+    .map(([month, value]) => ({
+      month: monthLabel(month),
+      crimes: value.crimes,
+      firs: value.firs,
+    }));
 
   const categoryBuckets = new Map<string, number>();
   crimes.forEach((crime) => {
     categoryBuckets.set(crime.category, (categoryBuckets.get(crime.category) ?? 0) + 1);
   });
 
-  const topDistricts = [...districts].sort((left, right) => right.crimeCount - left.crimeCount).slice(0, 10);
-  const districtComparison = topDistricts.map((district) => ({ name: district.name, crimes: district.crimeCount, firs: district.firCount, hotspots: district.hotspotCount }));
+  const topDistricts = [...districts]
+    .sort((left, right) => right.crimeCount - left.crimeCount)
+    .slice(0, 10);
+  const districtComparison = topDistricts.map((district) => ({
+    name: district.name,
+    crimes: district.crimeCount,
+    firs: district.firCount,
+    hotspots: district.hotspotCount,
+  }));
 
   const heatmapPoints = crimes
-    .filter((crime) => crime.severity === "High" || crime.severity === "Critical" || crime.repeatOffender)
+    .filter(
+      (crime) => crime.severity === "High" || crime.severity === "Critical" || crime.repeatOffender,
+    )
     .slice(0, 200)
     .map((crime, index) => ({
       lat: crime.latitude,
       lng: crime.longitude,
-      intensity: clamp(0.4 + (index % 12) * 0.05 + (crime.severity === "Critical" ? 0.3 : 0), 0.35, 1),
+      intensity: clamp(
+        0.4 + (index % 12) * 0.05 + (crime.severity === "Critical" ? 0.3 : 0),
+        0.35,
+        1,
+      ),
       district: crime.districtName,
       category: crime.category,
     }));
@@ -785,8 +997,12 @@ export function getDashboardSummary(): DashboardSummary {
     crimeRate: Math.round((crimes.length / districts.length) * 10) / 10,
     districtComparison,
     monthlyTrends,
-    crimeCategories: [...categoryBuckets.entries()].map(([name, value]) => ({ name, value })).sort((left, right) => right.value - left.value),
-    recentFirs: [...firs].sort((left, right) => right.dateFiled.localeCompare(left.dateFiled)).slice(0, 8),
+    crimeCategories: [...categoryBuckets.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value),
+    recentFirs: [...firs]
+      .sort((left, right) => right.dateFiled.localeCompare(left.dateFiled))
+      .slice(0, 8),
     topCrimeDistricts: topDistricts.map((district: any) => ({
       id: district.id,
       name: district.name,
@@ -799,14 +1015,42 @@ export function getDashboardSummary(): DashboardSummary {
     })),
     heatmapPoints,
     kpis: [
-      { label: "Total Crimes", value: crimes.length.toLocaleString(), hint: "All open and closed crime records" },
-      { label: "Active Cases", value: activeCases.toLocaleString(), hint: "Open, investigation, and forensic cases" },
-      { label: "Solved Cases", value: solvedCases.toLocaleString(), hint: "Solved and filed in court" },
+      {
+        label: "Total Crimes",
+        value: crimes.length.toLocaleString(),
+        hint: "All open and closed crime records",
+      },
+      {
+        label: "Active Cases",
+        value: activeCases.toLocaleString(),
+        hint: "Open, investigation, and forensic cases",
+      },
+      {
+        label: "Solved Cases",
+        value: solvedCases.toLocaleString(),
+        hint: "Solved and filed in court",
+      },
       { label: "Pending Cases", value: pendingCases.toLocaleString(), hint: "Awaiting closure" },
-      { label: "FIR Records", value: firs.length.toLocaleString(), hint: "Registered FIRs across Karnataka" },
-      { label: "Repeat Offenders", value: repeatOffenders.toLocaleString(), hint: "Records flagged as repeat offenders" },
-      { label: "Police Stations", value: policeStations.length.toLocaleString(), hint: "Active stations in the network" },
-      { label: "Districts", value: districts.length.toLocaleString(), hint: "Karnataka districts covered" },
+      {
+        label: "FIR Records",
+        value: firs.length.toLocaleString(),
+        hint: "Registered FIRs across Karnataka",
+      },
+      {
+        label: "Repeat Offenders",
+        value: repeatOffenders.toLocaleString(),
+        hint: "Records flagged as repeat offenders",
+      },
+      {
+        label: "Police Stations",
+        value: policeStations.length.toLocaleString(),
+        hint: "Active stations in the network",
+      },
+      {
+        label: "Districts",
+        value: districts.length.toLocaleString(),
+        hint: "Karnataka districts covered",
+      },
     ],
   };
 }
@@ -818,7 +1062,10 @@ export function getDistrictSummaries() {
 export function getAnalyticsSummary(): AnalyticsSummary {
   const { crimes } = getData();
   const districts = districtCrimeStats();
-  const monthly = new Map<string, { crimes: number; firs: number; solved: number; pending: number }>();
+  const monthly = new Map<
+    string,
+    { crimes: number; firs: number; solved: number; pending: number }
+  >();
   crimes.forEach((crime) => {
     const key = monthKey(crime.crimeTime);
     const existing = monthly.get(key) ?? { crimes: 0, firs: 0, solved: 0, pending: 0 };
@@ -828,7 +1075,9 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     monthly.set(key, existing);
   });
 
-  const sortedMonths = [...monthly.entries()].sort((left, right) => left[0].localeCompare(right[0]));
+  const sortedMonths = [...monthly.entries()].sort((left, right) =>
+    left[0].localeCompare(right[0]),
+  );
   const lastTwelve = sortedMonths.slice(-12);
   const yearly = new Map<number, { crimes: number; solved: number }>();
   crimes.forEach((crime) => {
@@ -840,8 +1089,18 @@ export function getAnalyticsSummary(): AnalyticsSummary {
   });
 
   const categories = new Map<string, number>();
-  const ageBands = new Map<string, number>([["Below 18", 0], ["18-30", 0], ["31-45", 0], ["46-60", 0], ["60+", 0]]);
-  const genders = new Map<string, number>([["Male", 0], ["Female", 0], ["Other", 0]]);
+  const ageBands = new Map<string, number>([
+    ["Below 18", 0],
+    ["18-30", 0],
+    ["31-45", 0],
+    ["46-60", 0],
+    ["60+", 0],
+  ]);
+  const genders = new Map<string, number>([
+    ["Male", 0],
+    ["Female", 0],
+    ["Other", 0],
+  ]);
 
   crimes.forEach((crime) => {
     categories.set(crime.category, (categories.get(crime.category) ?? 0) + 1);
@@ -857,7 +1116,11 @@ export function getAnalyticsSummary(): AnalyticsSummary {
     genders.set(victim.gender, (genders.get(victim.gender) ?? 0) + 1);
   });
 
-  const observed = lastTwelve.map(([month, value]) => ({ month: monthLabel(month), observed: value.crimes, projected: Math.round(value.crimes * 1.08) }));
+  const observed = lastTwelve.map(([month, value]) => ({
+    month: monthLabel(month),
+    observed: value.crimes,
+    projected: Math.round(value.crimes * 1.08),
+  }));
   const predictionGraph = observed.map((entry, index) => ({
     month: entry.month,
     observed: entry.observed,
@@ -865,19 +1128,27 @@ export function getAnalyticsSummary(): AnalyticsSummary {
   }));
 
   const calculatedRiskScores = calculateDistrictRiskScores(districts, crimes);
-  const sortedRiskScores = [...calculatedRiskScores].sort((left, right) => right.score - left.score);
+  const sortedRiskScores = [...calculatedRiskScores].sort(
+    (left, right) => right.score - left.score,
+  );
 
-  const riskScores = sortedRiskScores.map((r) => ({
-    districtId: r.districtId,
-    district: r.district,
-    score: r.score,
-    level: r.level,
-    reasons: r.reasons,
-    trend: districts.find((d) => d.id === r.districtId)?.trend.slice(-1)[0] ?? 0,
-  })).slice(0, 10);
+  const riskScores = sortedRiskScores
+    .map((r) => ({
+      districtId: r.districtId,
+      district: r.district,
+      score: r.score,
+      level: r.level,
+      reasons: r.reasons,
+      trend: districts.find((d) => d.id === r.districtId)?.trend.slice(-1)[0] ?? 0,
+    }))
+    .slice(0, 10);
 
   const anomalies = districts
-    .filter((district) => district.crimeCount > districts.reduce((sum, item) => sum + item.crimeCount, 0) / districts.length * 1.4)
+    .filter(
+      (district) =>
+        district.crimeCount >
+        (districts.reduce((sum, item) => sum + item.crimeCount, 0) / districts.length) * 1.4,
+    )
     .slice(0, 5)
     .map((district) => ({
       title: `${district.name} spike`,
@@ -893,12 +1164,32 @@ export function getAnalyticsSummary(): AnalyticsSummary {
   }));
 
   return {
-    barSeries: lastTwelve.map(([month, value]) => ({ label: monthLabel(month), crimes: value.crimes, firs: value.firs })),
-    pieSeries: [...categories.entries()].map(([name, value]) => ({ name, value })).sort((left, right) => right.value - left.value),
-    lineSeries: lastTwelve.map(([month, value]) => ({ month: monthLabel(month), crimeCount: value.crimes, solvedCount: value.solved, pendingCount: value.pending })),
-    yearlyTrend: [...yearly.entries()].sort((left, right) => left[0] - right[0]).map(([year, value]) => ({ year, crimes: value.crimes, solved: value.solved })),
-    districtComparison: districts.slice(0, 10).map((district) => ({ name: district.name, crimes: district.crimeCount, solved: Math.round(district.crimeCount * 0.45), pending: Math.round(district.crimeCount * 0.55) })),
-    categoryDistribution: [...categories.entries()].map(([name, value]) => ({ name, value })).sort((left, right) => right.value - left.value),
+    barSeries: lastTwelve.map(([month, value]) => ({
+      label: monthLabel(month),
+      crimes: value.crimes,
+      firs: value.firs,
+    })),
+    pieSeries: [...categories.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value),
+    lineSeries: lastTwelve.map(([month, value]) => ({
+      month: monthLabel(month),
+      crimeCount: value.crimes,
+      solvedCount: value.solved,
+      pendingCount: value.pending,
+    })),
+    yearlyTrend: [...yearly.entries()]
+      .sort((left, right) => left[0] - right[0])
+      .map(([year, value]) => ({ year, crimes: value.crimes, solved: value.solved })),
+    districtComparison: districts.slice(0, 10).map((district) => ({
+      name: district.name,
+      crimes: district.crimeCount,
+      solved: Math.round(district.crimeCount * 0.45),
+      pending: Math.round(district.crimeCount * 0.55),
+    })),
+    categoryDistribution: [...categories.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value),
     ageDistribution: [...ageBands.entries()].map(([band, value]) => ({ band, value })),
     genderDistribution: [...genders.entries()].map(([name, value]) => ({ name, value })),
     predictionGraph,
@@ -910,24 +1201,70 @@ export function getAnalyticsSummary(): AnalyticsSummary {
 
 export function getNetworkGraphSummary(): NetworkGraphSummary {
   const { crimes, accused, victims, policeStations, districts } = getData();
-  const topCriminals = accused.slice().sort((left, right) => Number(right.repeatOffender) - Number(left.repeatOffender)).slice(0, 8);
+  const topCriminals = accused
+    .slice()
+    .sort((left, right) => Number(right.repeatOffender) - Number(left.repeatOffender))
+    .slice(0, 8);
   const topVictims = victims.slice(0, 8);
   const topStations = policeStations.slice(0, 8);
-  const topDistricts = districts.slice().sort((left, right) => right.crimeCount - left.crimeCount).slice(0, 8);
+  const topDistricts = districts
+    .slice()
+    .sort((left, right) => right.crimeCount - left.crimeCount)
+    .slice(0, 8);
   const topCases = crimes.slice(0, 8);
 
   const nodes: NetworkGraphNode[] = [
-    ...topCriminals.map((item, index) => ({ id: item.id, label: item.name, type: "criminal" as const, district: item.districtId, value: 8 - index })),
-    ...topVictims.map((item, index) => ({ id: item.id, label: item.name, type: "victim" as const, district: item.districtId, value: 7 - index })),
-    ...topStations.map((item, index) => ({ id: item.id, label: item.name, type: "station" as const, district: item.districtId, value: 6 - index })),
-    ...topDistricts.map((item, index) => ({ id: item.id, label: item.name, type: "district" as const, district: item.id, value: 9 - index })),
-    ...topCases.map((item, index) => ({ id: item.id, label: item.caseNumber, type: "case" as const, district: item.districtId, value: 5 - index })),
+    ...topCriminals.map((item, index) => ({
+      id: item.id,
+      label: item.name,
+      type: "criminal" as const,
+      district: item.districtId,
+      value: 8 - index,
+    })),
+    ...topVictims.map((item, index) => ({
+      id: item.id,
+      label: item.name,
+      type: "victim" as const,
+      district: item.districtId,
+      value: 7 - index,
+    })),
+    ...topStations.map((item, index) => ({
+      id: item.id,
+      label: item.name,
+      type: "station" as const,
+      district: item.districtId,
+      value: 6 - index,
+    })),
+    ...topDistricts.map((item, index) => ({
+      id: item.id,
+      label: item.name,
+      type: "district" as const,
+      district: item.id,
+      value: 9 - index,
+    })),
+    ...topCases.map((item, index) => ({
+      id: item.id,
+      label: item.caseNumber,
+      type: "case" as const,
+      district: item.districtId,
+      value: 5 - index,
+    })),
   ];
 
   const edges: NetworkGraphEdge[] = [];
   topCases.forEach((crime, index) => {
-    edges.push({ source: crime.id, target: crime.accusedId, label: "accused", weight: 3 + (index % 2) });
-    edges.push({ source: crime.id, target: crime.victimId, label: "victim", weight: 2 + (index % 3) });
+    edges.push({
+      source: crime.id,
+      target: crime.accusedId,
+      label: "accused",
+      weight: 3 + (index % 2),
+    });
+    edges.push({
+      source: crime.id,
+      target: crime.victimId,
+      label: "victim",
+      weight: 2 + (index % 3),
+    });
     edges.push({ source: crime.id, target: crime.policeStationId, label: "station", weight: 2 });
     edges.push({ source: crime.id, target: crime.districtId, label: "district", weight: 3 });
   });
@@ -938,7 +1275,10 @@ export function getNetworkGraphSummary(): NetworkGraphSummary {
     highlights: [
       { label: "Active links", value: String(edges.length) },
       { label: "Core entities", value: String(nodes.length) },
-      { label: "Repeat offenders", value: String(accused.filter((item) => item.repeatOffender).length) },
+      {
+        label: "Repeat offenders",
+        value: String(accused.filter((item) => item.repeatOffender).length),
+      },
       { label: "Hot districts", value: String(topDistricts.length) },
     ],
   };
@@ -968,16 +1308,16 @@ export interface CriminalProfile {
 
 export function getCriminalTimelineData(): CriminalProfile[] {
   const { crimes, accused, firs } = getData();
-  
+
   return accused.map((acc) => {
     const accCrimes = crimes.filter((c) => c.accusedId === acc.id || c.accusedName === acc.name);
     const events: CriminalTimelineEvent[] = [];
-    
+
     accCrimes.forEach((crime) => {
       const linkedFir = firs.find((f) => f.id === crime.firId || f.crimeId === crime.id);
       const firNum = linkedFir?.firNumber ?? "N/A";
       const crimeDate = new Date(crime.crimeTime);
-      
+
       // 1. Crime committed event
       events.push({
         id: `event-${crime.id}-committed`,
@@ -1126,12 +1466,16 @@ import {
 
 export type { HybridAssistantResponse };
 
-export function getHybridAssistantResponse(question: string): HybridAssistantResponse {
-  const response = internalGetHybridAssistantResponse(question);
+export async function getHybridAssistantResponse(
+  question: string,
+): Promise<HybridAssistantResponse> {
+  const response = await internalGetHybridAssistantResponse(question);
   return enrichAssistantResponseWithRecommendations(response, question);
 }
 
-function internalGetHybridAssistantResponse(question: string): HybridAssistantResponse {
+async function internalGetHybridAssistantResponse(
+  question: string,
+): Promise<HybridAssistantResponse> {
   let cleanQuestion = question;
   let contextPage = "";
   let contextRows: any[] = [];
@@ -1175,9 +1519,14 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
   }
 
   // Similar Case Finder checking (Feature 1)
-  const isSimilarCasesQuery = /similar|matching cases|case finder|compare fir|find similarity/i.test(cleanQuestion);
+  const isSimilarCasesQuery =
+    /similar|matching cases|case finder|compare fir|find similarity/i.test(cleanQuestion);
   if (isSimilarCasesQuery) {
-    const caseMatch = cleanQuestion.match(/case\/[a-z0-9]+\/\d+/i) || cleanQuestion.match(/fir\/[a-z0-9]+\/\d+/i) || cleanQuestion.match(/crime-[a-z0-9]+/i) || cleanQuestion.match(/fir-[a-z0-9]+/i);
+    const caseMatch =
+      cleanQuestion.match(/case\/[a-z0-9]+\/\d+/i) ||
+      cleanQuestion.match(/fir\/[a-z0-9]+\/\d+/i) ||
+      cleanQuestion.match(/crime-[a-z0-9]+/i) ||
+      cleanQuestion.match(/fir-[a-z0-9]+/i);
     let targetKey = "";
     if (caseMatch) {
       targetKey = caseMatch[0].toUpperCase();
@@ -1216,7 +1565,14 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
           ],
           handledBy: "analysis",
           tableRows: matches as any[],
-          tableColumns: ["caseNumber", "firNumber", "crimeType", "districtName", "similarityPercentage", "modusOperandi"],
+          tableColumns: [
+            "caseNumber",
+            "firNumber",
+            "crimeType",
+            "districtName",
+            "similarityPercentage",
+            "modusOperandi",
+          ],
         };
 
         return finalResponse;
@@ -1242,21 +1598,29 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
       const matchedRow = contextRows.find((r) => r.caseNumber?.toUpperCase() === matchStr);
       if (matchedRow) {
         return {
-          answer: `Found case **${matchedRow.caseNumber}** in the page records:\n\n` +
-                  `• **Title**: ${matchedRow.title ?? matchedRow.crimeType ?? "Crime Record"}\n` +
-                  `• **District**: ${matchedRow.districtName}\n` +
-                  `• **Severity**: ${matchedRow.severity}\n` +
-                  `• **Status**: ${matchedRow.status}\n` +
-                  `• **Officer**: ${matchedRow.investigationOfficer ?? matchedRow.officer}\n` +
-                  `• **Accused**: ${matchedRow.accusedName ?? "Unknown"}\n` +
-                  `• **Victim**: ${matchedRow.victimName ?? "Unknown"}\n` +
-                  `• **Modus Operandi**: ${matchedRow.modusOperandi ?? "N/A"}`,
+          answer:
+            `Found case **${matchedRow.caseNumber}** in the page records:\n\n` +
+            `• **Title**: ${matchedRow.title ?? matchedRow.crimeType ?? "Crime Record"}\n` +
+            `• **District**: ${matchedRow.districtName}\n` +
+            `• **Severity**: ${matchedRow.severity}\n` +
+            `• **Status**: ${matchedRow.status}\n` +
+            `• **Officer**: ${matchedRow.investigationOfficer ?? matchedRow.officer}\n` +
+            `• **Accused**: ${matchedRow.accusedName ?? "Unknown"}\n` +
+            `• **Victim**: ${matchedRow.victimName ?? "Unknown"}\n` +
+            `• **Modus Operandi**: ${matchedRow.modusOperandi ?? "N/A"}`,
           confidence: 0.99,
           citations: ["Visible page context"],
           suggestions: ["Show open cases", "Show critical crimes"],
           handledBy: "sql",
           tableRows: [matchedRow],
-          tableColumns: ["caseNumber", "districtName", "crimeType", "severity", "status", "investigationOfficer"],
+          tableColumns: [
+            "caseNumber",
+            "districtName",
+            "crimeType",
+            "severity",
+            "status",
+            "investigationOfficer",
+          ],
         };
       }
     }
@@ -1266,27 +1630,38 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
       const matchedRow = contextRows.find((r) => r.firNumber?.toUpperCase() === matchStr);
       if (matchedRow) {
         return {
-          answer: `Found FIR **${matchedRow.firNumber}** in the page records:\n\n` +
-                  `• **District**: ${matchedRow.districtName}\n` +
-                  `• **Police Station**: ${matchedRow.policeStationName}\n` +
-                  `• **Officer**: ${matchedRow.officer}\n` +
-                  `• **Status**: ${matchedRow.status}\n` +
-                  `• **IPC Section**: ${matchedRow.section}\n` +
-                  `• **Date Filed**: ${matchedRow.dateFiled?.slice(0, 10) ?? "N/A"}\n` +
-                  `• **Details**: ${matchedRow.caseDetails}`,
+          answer:
+            `Found FIR **${matchedRow.firNumber}** in the page records:\n\n` +
+            `• **District**: ${matchedRow.districtName}\n` +
+            `• **Police Station**: ${matchedRow.policeStationName}\n` +
+            `• **Officer**: ${matchedRow.officer}\n` +
+            `• **Status**: ${matchedRow.status}\n` +
+            `• **IPC Section**: ${matchedRow.section}\n` +
+            `• **Date Filed**: ${matchedRow.dateFiled?.slice(0, 10) ?? "N/A"}\n` +
+            `• **Details**: ${matchedRow.caseDetails}`,
           confidence: 0.99,
           citations: ["Visible page context"],
           suggestions: ["List recent FIRs", "Filter by officer"],
           handledBy: "sql",
           tableRows: [matchedRow],
-          tableColumns: ["firNumber", "districtName", "policeStationName", "officer", "status", "section"],
+          tableColumns: [
+            "firNumber",
+            "districtName",
+            "policeStationName",
+            "officer",
+            "status",
+            "section",
+          ],
         };
       }
     }
   }
 
   // Handle summary queries specifically for page context
-  const isContextSummaryQuery = /summarise|summarize|tell me about|explain|describe|what is shown|records shown|this page|these records|these cases|these fir/i.test(cleanQuestion);
+  const isContextSummaryQuery =
+    /summarise|summarize|tell me about|explain|describe|what is shown|records shown|this page|these records|these cases|these fir/i.test(
+      cleanQuestion,
+    );
   if (contextRows.length > 0 && isContextSummaryQuery) {
     const isCrime = contextPage.toLowerCase().includes("crime") || "caseNumber" in contextRows[0];
     const isFir = contextPage.toLowerCase().includes("fir") || "firNumber" in contextRows[0];
@@ -1303,15 +1678,22 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
         if (r.status) statuses[r.status] = (statuses[r.status] ?? 0) + 1;
       });
 
-      const catStr = Object.entries(categories).map(([k, v]) => `${k} (${v})`).join(", ");
-      const sevStr = Object.entries(severities).map(([k, v]) => `${k} (${v})`).join(", ");
-      const statStr = Object.entries(statuses).map(([k, v]) => `${k} (${v})`).join(", ");
+      const catStr = Object.entries(categories)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
+      const sevStr = Object.entries(severities)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
+      const statStr = Object.entries(statuses)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
 
-      let answer = `Here is a summary of the ${total} crime records visible on this page:\n\n` +
-                   `• **Categories**: ${catStr || "None"}\n` +
-                   `• **Severities**: ${sevStr || "None"}\n` +
-                   `• **Statuses**: ${statStr || "None"}\n\n` +
-                   `You can search, filter, and drill down on these records using the platform controls.`;
+      let answer =
+        `Here is a summary of the ${total} crime records visible on this page:\n\n` +
+        `• **Categories**: ${catStr || "None"}\n` +
+        `• **Severities**: ${sevStr || "None"}\n` +
+        `• **Statuses**: ${statStr || "None"}\n\n` +
+        `You can search, filter, and drill down on these records using the platform controls.`;
 
       return {
         answer,
@@ -1320,7 +1702,14 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
         suggestions: ["Show open cases", "Show critical crimes", "Show crime trends"],
         handledBy: "sql",
         tableRows: contextRows,
-        tableColumns: ["caseNumber", "districtName", "crimeType", "severity", "status", "investigationOfficer"],
+        tableColumns: [
+          "caseNumber",
+          "districtName",
+          "crimeType",
+          "severity",
+          "status",
+          "investigationOfficer",
+        ],
       };
     }
 
@@ -1334,13 +1723,18 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
         if (r.section) sections[r.section] = (sections[r.section] ?? 0) + 1;
       });
 
-      const statStr = Object.entries(statuses).map(([k, v]) => `${k} (${v})`).join(", ");
-      const secStr = Object.entries(sections).map(([k, v]) => `${k} (${v})`).join(", ");
+      const statStr = Object.entries(statuses)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
+      const secStr = Object.entries(sections)
+        .map(([k, v]) => `${k} (${v})`)
+        .join(", ");
 
-      let answer = `Here is a summary of the ${total} FIR records visible on this page:\n\n` +
-                   `• **Statuses**: ${statStr || "None"}\n` +
-                   `• **Sections**: ${secStr || "None"}\n\n` +
-                   `You can inspect live case details or filter these FIRs using the page controls.`;
+      let answer =
+        `Here is a summary of the ${total} FIR records visible on this page:\n\n` +
+        `• **Statuses**: ${statStr || "None"}\n` +
+        `• **Sections**: ${secStr || "None"}\n\n` +
+        `You can inspect live case details or filter these FIRs using the page controls.`;
 
       return {
         answer,
@@ -1349,36 +1743,43 @@ function internalGetHybridAssistantResponse(question: string): HybridAssistantRe
         suggestions: ["List recent FIRs", "Filter by officer", "Download report"],
         handledBy: "sql",
         tableRows: contextRows,
-        tableColumns: ["firNumber", "districtName", "policeStationName", "officer", "status", "section"],
+        tableColumns: [
+          "firNumber",
+          "districtName",
+          "policeStationName",
+          "officer",
+          "status",
+          "section",
+        ],
       };
     }
   }
 
   // Step 3: Understand intent
-  const { intent, normalisedQuery, analysisType } = routeIntent(cleanQuestion);
+  const { intent, normalisedQuery, analysisType } = await routeIntent(cleanQuestion);
 
   // Step 4 & 5: Route to the correct data retrieval module
 
   // CAW intent — Crimes Against Women dataset (dedicated path)
   if (intent === "caw") {
     // Try analysis engine first for rich chart + heatmap output
-    const analysisResult = runAnalysis("caw", normalisedQuery);   // Steps 6 & 7 – CAW analysis
-    return generateAnalysisResponse(analysisResult, cleanQuestion);    // Steps 8 & 9 – LLM response
+    const analysisResult = runAnalysis("caw", normalisedQuery); // Steps 6 & 7 – CAW analysis
+    return generateAnalysisResponse(analysisResult, cleanQuestion); // Steps 8 & 9 – LLM response
   }
 
   if (intent === "sql") {
-    const sqlResult = executeTextToSql(normalisedQuery, "sql");   // Step 5 – execute query
-    return generateSqlResponse(sqlResult, cleanQuestion);              // Steps 8 & 9 – LLM response
+    const sqlResult = await executeTextToSql(normalisedQuery, "sql"); // Step 5 – execute query
+    return await generateSqlResponse(sqlResult, cleanQuestion); // Steps 8 & 9 – LLM response
   }
 
   if (intent === "rag") {
-    const ragResult = retrieveFromRag(normalisedQuery);           // Step 5 – retrieve chunks
-    return generateRagResponse(ragResult, cleanQuestion);              // Steps 8 & 9 – LLM response
+    const ragResult = retrieveFromRag(normalisedQuery); // Step 5 – retrieve chunks
+    return generateRagResponse(ragResult, cleanQuestion); // Steps 8 & 9 – LLM response
   }
 
   if (intent === "analysis") {
     const analysisResult = runAnalysis(analysisType ?? "trend", normalisedQuery); // Steps 6 & 7
-    return generateAnalysisResponse(analysisResult, cleanQuestion);    // Steps 8 & 9 – LLM response
+    return generateAnalysisResponse(analysisResult, cleanQuestion); // Steps 8 & 9 – LLM response
   }
 
   // General fallback: check if we can retrieve relevant documents from RAG before returning the intro
@@ -1398,9 +1799,27 @@ export function getReportsSummary() {
   return {
     generatedAt: new Date().toISOString(),
     reports: [
-      { id: "rpt-dashboard", title: "State Crime Dashboard", format: "PDF/CSV/XLSX", rows: dashboard.totals.crimes, updatedAt: new Date().toISOString() },
-      { id: "rpt-districts", title: "District Comparison", format: "CSV/XLSX", rows: dashboard.topCrimeDistricts.length, updatedAt: new Date().toISOString() },
-      { id: "rpt-hotspots", title: "Hotspot Forecast", format: "PDF/CSV", rows: analytics.hotspotPrediction.length, updatedAt: new Date().toISOString() },
+      {
+        id: "rpt-dashboard",
+        title: "State Crime Dashboard",
+        format: "PDF/CSV/XLSX",
+        rows: dashboard.totals.crimes,
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "rpt-districts",
+        title: "District Comparison",
+        format: "CSV/XLSX",
+        rows: dashboard.topCrimeDistricts.length,
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "rpt-hotspots",
+        title: "Hotspot Forecast",
+        format: "PDF/CSV",
+        rows: analytics.hotspotPrediction.length,
+        updatedAt: new Date().toISOString(),
+      },
     ],
   };
 }
@@ -1409,7 +1828,16 @@ export function getSettingsSummary() {
   const dashboard = getDashboardSummary();
   return {
     roles: ["admin", "police_officer", "analyst", "scrb_officer", "investigator", "data_analyst"],
-    modules: ["Crimes", "FIR Records", "Districts", "Crime Map", "Analytics", "AI Assistant", "Reports", "Network Analysis"],
+    modules: [
+      "Crimes",
+      "FIR Records",
+      "Districts",
+      "Crime Map",
+      "Analytics",
+      "AI Assistant",
+      "Reports",
+      "Network Analysis",
+    ],
     dataStatus: "Connected",
     services: {
       postgres: "Ready for Supabase/PostgreSQL deployment",

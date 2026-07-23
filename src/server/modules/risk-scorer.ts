@@ -20,7 +20,7 @@ export interface DynamicRiskScore {
  */
 export function calculateDistrictRiskScores(
   districts: DistrictRecord[],
-  crimes: CrimeRecord[]
+  crimes: CrimeRecord[],
 ): DynamicRiskScore[] {
   // Find maximum crime count across all districts to normalize frequency
   const maxCrimes = Math.max(...districts.map((d) => d.crimeCount), 1);
@@ -55,14 +55,17 @@ export function calculateDistrictRiskScores(
 
     // 4. Crime Severity Score (max 20 pts)
     const criticalOrHighCount = districtCrimes.filter(
-      (c) => c.severity === "Critical" || c.severity === "High"
+      (c) => c.severity === "Critical" || c.severity === "High",
     ).length;
     const severityRatio = totalCrimes > 0 ? criticalOrHighCount / totalCrimes : 0;
     // Scale so 50% severity ratio is max score (20 pts)
     const severityScore = Math.max(0, Math.min(20, severityRatio * 40));
 
     // Sum and round
-    const score = Math.max(0, Math.min(100, Math.round(freqScore + trendScore + repeatScore + severityScore)));
+    const score = Math.max(
+      0,
+      Math.min(100, Math.round(freqScore + trendScore + repeatScore + severityScore)),
+    );
 
     // Risk level
     let level: "Low" | "Medium" | "High" = "Medium";

@@ -14,7 +14,14 @@ interface SectionPageProps {
   columns?: Array<{ key: string; label: string }>;
 }
 
-export function SimpleSectionPage({ title, description, queryKey, endpoint, assistant = false, columns = [] }: SectionPageProps) {
+export function SimpleSectionPage({
+  title,
+  description,
+  queryKey,
+  endpoint,
+  assistant = false,
+  columns = [],
+}: SectionPageProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
@@ -27,8 +34,10 @@ export function SimpleSectionPage({ title, description, queryKey, endpoint, assi
   const rows = useMemo(() => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    if (Array.isArray((data as { items?: unknown[] }).items)) return (data as { items: unknown[] }).items;
-    if (Array.isArray((data as { reports?: unknown[] }).reports)) return (data as { reports: unknown[] }).reports;
+    if (Array.isArray((data as { items?: unknown[] }).items))
+      return (data as { items: unknown[] }).items;
+    if (Array.isArray((data as { reports?: unknown[] }).reports))
+      return (data as { reports: unknown[] }).reports;
     return [];
   }, [data]);
 
@@ -51,7 +60,15 @@ export function SimpleSectionPage({ title, description, queryKey, endpoint, assi
         columns.forEach((col) => {
           if (col.key in row) cleanObj[col.key] = row[col.key];
         });
-        const essentials = ["title", "caseDetails", "dateFiled", "accusedName", "victimName", "modusOperandi", "section"];
+        const essentials = [
+          "title",
+          "caseDetails",
+          "dateFiled",
+          "accusedName",
+          "victimName",
+          "modusOperandi",
+          "section",
+        ];
         essentials.forEach((key) => {
           if (key in row) cleanObj[key] = row[key];
         });
@@ -93,57 +110,73 @@ export function SimpleSectionPage({ title, description, queryKey, endpoint, assi
       {/** Assistant UI */}
       {/** eslint-disable-next-line react-hooks/rules-of-hooks */}
       {/** Note: keeping hooks inline-safe since this component is a function component */}
-        {assistant && (
-          <Card className="glass border-white/10 p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center">
-              <input
-                className="flex-1 rounded border border-white/10 bg-transparent px-3 py-2 text-sm text-foreground"
-                value={assistantQuestion}
-                onChange={(e) => setAssistantQuestion(e.target.value)}
-                placeholder={`Ask about the ${title.toLowerCase()} displayed here`}
-                onKeyDown={(e) => e.key === "Enter" && askAssistant()}
-              />
-              <button
-                onClick={() => askAssistant()}
-                className="rounded bg-primary/10 px-3 py-2 text-sm text-accent"
-                disabled={assistantLoading}
-              >
-                {assistantLoading ? "Thinking…" : "Ask AI"}
-              </button>
-            </div>
+      {assistant && (
+        <Card className="glass border-white/10 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              className="flex-1 rounded border border-white/10 bg-transparent px-3 py-2 text-sm text-foreground"
+              value={assistantQuestion}
+              onChange={(e) => setAssistantQuestion(e.target.value)}
+              placeholder={`Ask about the ${title.toLowerCase()} displayed here`}
+              onKeyDown={(e) => e.key === "Enter" && askAssistant()}
+            />
+            <button
+              onClick={() => askAssistant()}
+              className="rounded bg-primary/10 px-3 py-2 text-sm text-accent"
+              disabled={assistantLoading}
+            >
+              {assistantLoading ? "Thinking…" : "Ask AI"}
+            </button>
+          </div>
 
-            {assistantError && <p className="mt-2 text-xs text-red-400">{assistantError}</p>}
-            {assistantAnswer && (
-              <div className="mt-3 rounded border border-white/5 bg-white/3 p-3 text-sm">
-                <p className="mb-2 text-foreground">{assistantAnswer}</p>
-                {assistantConfidence !== null && (
-                  <p className="text-xs text-muted-foreground">Confidence: {Math.round(assistantConfidence * 100)}%</p>
-                )}
-                {assistantCitations && assistantCitations.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {assistantCitations.map((c) => (
-                      <span key={c} className="rounded-full border border-white/10 px-3 py-1">{c}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-        )}
+          {assistantError && <p className="mt-2 text-xs text-red-400">{assistantError}</p>}
+          {assistantAnswer && (
+            <div className="mt-3 rounded border border-white/5 bg-white/3 p-3 text-sm">
+              <p className="mb-2 text-foreground">{assistantAnswer}</p>
+              {assistantConfidence !== null && (
+                <p className="text-xs text-muted-foreground">
+                  Confidence: {Math.round(assistantConfidence * 100)}%
+                </p>
+              )}
+              {assistantCitations && assistantCitations.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  {assistantCitations.map((c) => (
+                    <span key={c} className="rounded-full border border-white/10 px-3 py-1">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
       {/** We'll implement conditional render below */}
       {/** End assistant placeholder */}
 
       {isLoading ? (
-        <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Loading {title.toLowerCase()}...</Card>
+        <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+          Loading {title.toLowerCase()}...
+        </Card>
       ) : error ? (
-        <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">Unable to load {title.toLowerCase()}.</Card>
+        <Card className="glass border-white/10 p-6 text-sm text-muted-foreground">
+          Unable to load {title.toLowerCase()}.
+        </Card>
       ) : (
         <Card className="glass border-white/10 p-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 <tr>
-                  {columns.length ? columns.map((column) => <th key={column.key} className="px-4 py-3">{column.label}</th>) : <th className="px-4 py-3">Record</th>}
+                  {columns.length ? (
+                    columns.map((column) => (
+                      <th key={column.key} className="px-4 py-3">
+                        {column.label}
+                      </th>
+                    ))
+                  ) : (
+                    <th className="px-4 py-3">Record</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -151,9 +184,13 @@ export function SimpleSectionPage({ title, description, queryKey, endpoint, assi
                   const item = row as Record<string, unknown>;
                   return (
                     <tr key={index} className="border-b border-white/5 text-foreground/90">
-                      {columns.length ? columns.map((column) => (
-                        <td key={column.key} className="px-4 py-3 text-muted-foreground">{String(item[column.key] ?? "")}</td>
-                      )) : (
+                      {columns.length ? (
+                        columns.map((column) => (
+                          <td key={column.key} className="px-4 py-3 text-muted-foreground">
+                            {String(item[column.key] ?? "")}
+                          </td>
+                        ))
+                      ) : (
                         <td className="px-4 py-3">{JSON.stringify(row)}</td>
                       )}
                     </tr>

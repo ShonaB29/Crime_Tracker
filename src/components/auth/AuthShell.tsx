@@ -34,9 +34,7 @@ export function AuthShell({
             Karnataka State Police
           </p>
           <h1 className="mt-2 font-display text-2xl font-bold text-foreground">{title}</h1>
-          {subtitle && (
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 max-w-sm text-sm text-muted-foreground">{subtitle}</p>}
         </div>
 
         <div className="glass rounded-2xl p-6 shadow-elegant sm:p-8">{children}</div>

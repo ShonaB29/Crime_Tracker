@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { getData, getHybridAssistantResponse, getCriminalTimelineData } from "../../crime-platform.server";
+import {
+  getData,
+  getHybridAssistantResponse,
+  getCriminalTimelineData,
+} from "../../crime-platform.server";
 import { calculateDistrictRiskScores } from "../risk-scorer";
 import { findSimilarCases } from "../similar-finder";
 
@@ -54,11 +58,13 @@ describe("Advanced Crime Intelligence Features Tests", () => {
       }
     });
 
-    it("returns similar case matches via similar query in getHybridAssistantResponse", () => {
+    it("returns similar case matches via similar query in getHybridAssistantResponse", async () => {
       const { crimes } = getData();
       const targetCase = crimes[0];
-      
-      const response = getHybridAssistantResponse(`find cases similar to ${targetCase.caseNumber}`);
+
+      const response = await getHybridAssistantResponse(
+        `find cases similar to ${targetCase.caseNumber}`,
+      );
       expect(response.answer).toContain("Similar Case Finder Results");
       expect(response.answer).toContain("Match)");
       expect(response.tableRows).toBeDefined();
@@ -68,8 +74,8 @@ describe("Advanced Crime Intelligence Features Tests", () => {
 
   // ── 3. AI Investigation Assistant Recommendations Tests ────────────────────
   describe("AI Investigation Assistant Recommendations", () => {
-    it("appends investigation recommendations to SQL queries", () => {
-      const response = getHybridAssistantResponse("cases in Dharwad");
+    it("appends investigation recommendations to SQL queries", async () => {
+      const response = await getHybridAssistantResponse("cases in Dharwad");
       expect(response.answer).toContain("AI Investigation Recommendations");
       expect(response.answer).toContain("Similar Cases");
       expect(response.answer).toContain("Possible Suspects");
@@ -78,13 +84,13 @@ describe("Advanced Crime Intelligence Features Tests", () => {
       expect(response.answer).toContain("Next Investigation Steps");
     });
 
-    it("appends investigation recommendations to RAG queries", () => {
-      const response = getHybridAssistantResponse("Census demographics details Dharwad");
+    it("appends investigation recommendations to RAG queries", async () => {
+      const response = await getHybridAssistantResponse("Census demographics details Dharwad");
       expect(response.answer).toContain("AI Investigation Recommendations");
     });
 
-    it("appends investigation recommendations to Analysis queries", () => {
-      const response = getHybridAssistantResponse("show crime trends");
+    it("appends investigation recommendations to Analysis queries", async () => {
+      const response = await getHybridAssistantResponse("show crime trends");
       expect(response.answer).toContain("AI Investigation Recommendations");
     });
   });

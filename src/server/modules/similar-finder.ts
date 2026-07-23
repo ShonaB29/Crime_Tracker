@@ -17,7 +17,24 @@ export interface CaseSimilarityResult {
  * Computes Jaccard word similarity between two strings.
  */
 function jaccardSimilarity(str1: string, str2: string): number {
-  const stopWords = new Set(["the", "and", "for", "are", "was", "with", "from", "that", "this", "here", "they", "them", "about", "these", "related", "pattern"]);
+  const stopWords = new Set([
+    "the",
+    "and",
+    "for",
+    "are",
+    "was",
+    "with",
+    "from",
+    "that",
+    "this",
+    "here",
+    "they",
+    "them",
+    "about",
+    "these",
+    "related",
+    "pattern",
+  ]);
   const tokenize = (str: string) =>
     str
       .toLowerCase()
@@ -46,12 +63,15 @@ export function findSimilarCases(caseIdOrNumber: string, topK = 5): CaseSimilari
 
   // Find the target case
   const targetCase = crimes.find(
-    (c) => c.id === caseIdOrNumber || c.caseNumber.toUpperCase() === caseIdOrNumber.toUpperCase() || c.firId === caseIdOrNumber
+    (c) =>
+      c.id === caseIdOrNumber ||
+      c.caseNumber.toUpperCase() === caseIdOrNumber.toUpperCase() ||
+      c.firId === caseIdOrNumber,
   );
   if (!targetCase) {
     // If not found directly, try finding by FIR number
     const targetFir = firs.find(
-      (f) => f.firNumber.toUpperCase() === caseIdOrNumber.toUpperCase() || f.id === caseIdOrNumber
+      (f) => f.firNumber.toUpperCase() === caseIdOrNumber.toUpperCase() || f.id === caseIdOrNumber,
     );
     if (targetFir) {
       const match = crimes.find((c) => c.firId === targetFir.id || c.id === targetFir.crimeId);
@@ -96,7 +116,7 @@ export function findSimilarCases(caseIdOrNumber: string, topK = 5): CaseSimilari
       // Calculate geometric distance in lat/lng
       const dist = Math.sqrt(
         Math.pow(candidate.latitude - targetCase.latitude, 2) +
-          Math.pow(candidate.longitude - targetCase.longitude, 2)
+          Math.pow(candidate.longitude - targetCase.longitude, 2),
       );
       if (dist < 0.5) {
         locationScore = Math.round((1 - dist / 0.5) * 10);
@@ -141,7 +161,10 @@ export function findSimilarCases(caseIdOrNumber: string, topK = 5): CaseSimilari
       }
     }
 
-    const similarityPercentage = Math.min(100, Math.max(0, Math.round(typeScore + locationScore + moScore + suspectScore + keywordScore)));
+    const similarityPercentage = Math.min(
+      100,
+      Math.max(0, Math.round(typeScore + locationScore + moScore + suspectScore + keywordScore)),
+    );
 
     if (similarityPercentage > 15) {
       results.push({

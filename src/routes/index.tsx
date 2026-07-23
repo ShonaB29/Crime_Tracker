@@ -19,10 +19,22 @@ export const Route = createFileRoute("/")({
 });
 
 const FEATURES = [
-  { icon: Brain, title: "AI Intelligence", desc: "Hotspot prediction, risk scoring & anomaly detection." },
+  {
+    icon: Brain,
+    title: "AI Intelligence",
+    desc: "Hotspot prediction, risk scoring & anomaly detection.",
+  },
   { icon: Map, title: "Geo Analytics", desc: "Interactive Karnataka crime maps & heatmaps." },
-  { icon: Network, title: "Network Analysis", desc: "Uncover criminal associations & repeat offenders." },
-  { icon: ShieldCheck, title: "Secure & Role-Based", desc: "JWT sessions with granular access control." },
+  {
+    icon: Network,
+    title: "Network Analysis",
+    desc: "Uncover criminal associations & repeat offenders.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Secure & Role-Based",
+    desc: "JWT sessions with granular access control.",
+  },
 ];
 
 function Landing() {

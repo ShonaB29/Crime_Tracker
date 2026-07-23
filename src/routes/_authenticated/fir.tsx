@@ -24,7 +24,7 @@ function FirPage() {
             "pb-3 text-sm font-semibold tracking-wider transition-colors relative uppercase",
             activeTab === "database"
               ? "text-accent border-b-2 border-accent"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           FIR Records Database
@@ -35,7 +35,7 @@ function FirPage() {
             "pb-3 text-sm font-semibold tracking-wider transition-colors relative uppercase",
             activeTab === "summarize"
               ? "text-accent border-b-2 border-accent"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           FIR Auto Summarizer

@@ -16,21 +16,23 @@
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
 
-export type CrimeSeverity  = "Low" | "Medium" | "High" | "Critical";
-export type CrimeStatus    = "Open" | "Under Investigation" | "Pending Forensic" | "Solved" | "Filed In Court";
-export type ArrestStatus   = "Not Arrested" | "Arrested" | "Wanted" | "Bail Granted";
-export type CourtStatus    = "Not Filed" | "Charge Sheet Filed" | "Trial Pending" | "Convicted" | "Acquitted";
-export type FirStatus      = "Registered" | "Investigating" | "Charge Sheet Filed" | "Closed";
-export type GenderType     = "Male" | "Female" | "Other" | "Unknown";
+export type CrimeSeverity = "Low" | "Medium" | "High" | "Critical";
+export type CrimeStatus =
+  "Open" | "Under Investigation" | "Pending Forensic" | "Solved" | "Filed In Court";
+export type ArrestStatus = "Not Arrested" | "Arrested" | "Wanted" | "Bail Granted";
+export type CourtStatus =
+  "Not Filed" | "Charge Sheet Filed" | "Trial Pending" | "Convicted" | "Acquitted";
+export type FirStatus = "Registered" | "Investigating" | "Charge Sheet Filed" | "Closed";
+export type GenderType = "Male" | "Female" | "Other" | "Unknown";
 
 // ── Table: districts ──────────────────────────────────────────────────────────
 // Source: India District Shapefiles + Indian Census 2011
 
 export interface District {
-  id: string;                  // "KA-01"
+  id: string; // "KA-01"
   state: string;
   name: string;
-  code: string;                // "K001"
+  code: string; // "K001"
   latitude: number;
   longitude: number;
   area_sq_km: number;
@@ -38,8 +40,8 @@ export interface District {
   population: number;
   male_population: number;
   female_population: number;
-  sex_ratio: number;           // females per 1000 males
-  literacy_rate: number;       // percentage
+  sex_ratio: number; // females per 1000 males
+  literacy_rate: number; // percentage
   urban_population: number;
   rural_population: number;
   sc_population: number;
@@ -58,8 +60,8 @@ export interface CrimeIndiaAnnual {
   district: string;
   district_id: string | null;
   year: number;
-  crime_head: string;          // NCRB crime head e.g. "Murder", "Theft"
-  crime_group: string;         // e.g. "Violent Crime", "Property Crime"
+  crime_head: string; // NCRB crime head e.g. "Murder", "Theft"
+  crime_group: string; // e.g. "Violent Crime", "Property Crime"
   sub_group: string | null;
   cases_reported: number;
   cases_chargesheeted: number;
@@ -153,10 +155,10 @@ export interface Fir {
   longitude: number | null;
   weapon_used: string;
   modus_operandi: string;
-  crime_date: string;          // ISO date string
+  crime_date: string; // ISO date string
   fir_date: string;
   year: number;
-  case_details: string;        // narrative used by RAG
+  case_details: string; // narrative used by RAG
   annual_record_id: number | null;
   caw_record_id: number | null;
 }

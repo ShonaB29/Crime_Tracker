@@ -87,15 +87,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "KSP Crime Intelligence Platform" },
-      { name: "description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
+      {
+        name: "description",
+        content:
+          "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support.",
+      },
       { name: "author", content: "KSP" },
       { property: "og:title", content: "KSP Crime Intelligence Platform" },
-      { property: "og:description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
+      {
+        property: "og:description",
+        content:
+          "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@ksp" },
       { name: "twitter:title", content: "KSP Crime Intelligence Platform" },
-      { name: "twitter:description", content: "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support." },
+      {
+        name: "twitter:description",
+        content:
+          "An AI-powered platform for Karnataka State Police, providing crime analytics, prediction, and investigation support.",
+      },
     ],
     links: [
       {

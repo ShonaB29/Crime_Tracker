@@ -1,4 +1,5 @@
 # Data Preprocessing & Cleaning Documentation
+
 ## KSP Crime Intelligence Platform
 
 ---
@@ -7,10 +8,10 @@
 
 This document describes every preprocessing and cleaning step applied to the datasets used in the KSP Crime Intelligence platform. Two primary datasets are used:
 
-| Dataset | Source | Records | Format |
-|---|---|---|---|
-| Crimes Against Women 2001–2021 | NCRB / Kaggle (balajivaraprasad) | 31 districts × 21 years = 651 rows | CSV → in-memory TypeScript |
-| General Crime / FIR Database | NCRB Crime in India + simulated FIRs | 10,000 crimes + 5,000 FIRs | Seeded in-memory |
+| Dataset                        | Source                               | Records                            | Format                     |
+| ------------------------------ | ------------------------------------ | ---------------------------------- | -------------------------- |
+| Crimes Against Women 2001–2021 | NCRB / Kaggle (balajivaraprasad)     | 31 districts × 21 years = 651 rows | CSV → in-memory TypeScript |
+| General Crime / FIR Database   | NCRB Crime in India + simulated FIRs | 10,000 crimes + 5,000 FIRs         | Seeded in-memory           |
 
 ---
 
@@ -18,22 +19,22 @@ This document describes every preprocessing and cleaning step applied to the dat
 
 ### 2.1 CAW Dataset (NCRB)
 
-| Issue | Description | How Handled |
-|---|---|---|
-| Missing district-level breakdown | NCRB publishes state totals; district-level data is aggregated | Distributed using Census 2011 population weights (see §4) |
-| Zero values for rare categories | `sati_prevention`, `importation_of_girls` are near-zero post-2010 | Kept as-is; `Math.max(0, ...)` prevents negative values |
-| Year 2020 anomaly | COVID-19 caused a ~10% drop in reported cases | Retained as real signal; documented in trend analysis |
-| Inconsistent column names | NCRB uses verbose names ("Assault on Women with Intent to Outrage Modesty") | Normalised to snake_case: `assault_on_women` |
-| No district coordinates | NCRB data has no lat/lng | Merged with Census 2011 district centroids |
+| Issue                            | Description                                                                 | How Handled                                               |
+| -------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Missing district-level breakdown | NCRB publishes state totals; district-level data is aggregated              | Distributed using Census 2011 population weights (see §4) |
+| Zero values for rare categories  | `sati_prevention`, `importation_of_girls` are near-zero post-2010           | Kept as-is; `Math.max(0, ...)` prevents negative values   |
+| Year 2020 anomaly                | COVID-19 caused a ~10% drop in reported cases                               | Retained as real signal; documented in trend analysis     |
+| Inconsistent column names        | NCRB uses verbose names ("Assault on Women with Intent to Outrage Modesty") | Normalised to snake_case: `assault_on_women`              |
+| No district coordinates          | NCRB data has no lat/lng                                                    | Merged with Census 2011 district centroids                |
 
 ### 2.2 General Crime Dataset
 
-| Issue | Description | How Handled |
-|---|---|---|
-| No real FIR text | NCRB does not publish individual FIR narratives | Synthetic narratives generated from crime category + MO templates |
-| Imbalanced severity distribution | Real data skews toward Low/Medium | Uniform random distribution applied for demo balance |
-| Missing accused/victim linkage | NCRB data has no individual-level records | Simulated with deterministic RNG (seed: 20260702) |
-| Date gaps | Some months have no crimes in sparse districts | Handled by monthly bucketing with zero-fill |
+| Issue                            | Description                                     | How Handled                                                       |
+| -------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| No real FIR text                 | NCRB does not publish individual FIR narratives | Synthetic narratives generated from crime category + MO templates |
+| Imbalanced severity distribution | Real data skews toward Low/Medium               | Uniform random distribution applied for demo balance              |
+| Missing accused/victim linkage   | NCRB data has no individual-level records       | Simulated with deterministic RNG (seed: 20260702)                 |
+| Date gaps                        | Some months have no crimes in sparse districts  | Handled by monthly bucketing with zero-fill                       |
 
 ---
 
@@ -78,11 +79,12 @@ district_count = state_total × (district_population / state_population) × nois
 ```
 
 **Example — Bengaluru Urban (weight = 0.145):**
+
 ```
 rape_2021 = 2135 × 0.145 × noise ≈ 309 ± 46 cases
 ```
 
-The 31 district weights sum to 1.0 (verified in test suite — `analysis-engine.test.ts`, test: *"population-weighted district share sums to ~1.0"*).
+The 31 district weights sum to 1.0 (verified in test suite — `analysis-engine.test.ts`, test: _"population-weighted district share sums to ~1.0"_).
 
 ---
 
@@ -97,10 +99,10 @@ function rng(seed: number) {
     s ^= s << 13;
     s ^= s >> 17;
     s ^= s << 5;
-    return (s >>> 0) / 0xFFFFFFFF;  // [0, 1)
+    return (s >>> 0) / 0xffffffff; // [0, 1)
   };
 }
-const rand = rng(20260702);  // Fixed seed — same output every run
+const rand = rng(20260702); // Fixed seed — same output every run
 ```
 
 **Why this matters:** Without a fixed seed, crime counts would change on every server restart, making the system non-reproducible and untestable.
@@ -110,7 +112,9 @@ const rand = rng(20260702);  // Fixed seed — same output every run
 ## 6. Data Cleaning Functions
 
 ### 6.1 `clamp(value, min, max)`
+
 Prevents out-of-range values. Used for:
+
 - Risk scores: `clamp(score, 20, 99)`
 - Heatmap intensity: `clamp(intensity, 0.35, 1.0)`
 - Vulnerability scores: `clamp(score, 0, 100)`
@@ -122,6 +126,7 @@ function clamp(value: number, min: number, max: number) {
 ```
 
 ### 6.2 `monthKey(isoDate)`
+
 Normalises ISO datetime strings to `YYYY-MM` for monthly aggregation:
 
 ```typescript
@@ -132,6 +137,7 @@ function monthKey(isoDate: string) {
 ```
 
 ### 6.3 `matchesSearch(value, search)`
+
 Case-insensitive substring search for filtering:
 
 ```typescript
@@ -141,11 +147,12 @@ function matchesSearch(value: string, search: string) {
 ```
 
 ### 6.4 `paginate(records, page, pageSize)`
+
 Prevents out-of-bounds access on large datasets:
 
 ```typescript
 function paginate<T>(records: T[], page = 1, pageSize = 20) {
-  const safePage     = Math.max(1, page);
+  const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   // ...
 }
@@ -157,15 +164,15 @@ function paginate<T>(records: T[], page = 1, pageSize = 20) {
 
 The following derived features are computed from raw data:
 
-| Feature | Formula | Used In |
-|---|---|---|
-| `crimeRate` | `totalCrimes / districtCount` | Dashboard KPI |
-| `hotspotScore` | `(crimeCount / totalCrimes) × 100 × n × 0.6 + hotspotCount × 1.5` | Hotspot detection |
-| `riskScore` | `crimeCount / 25 + hotspotCount × 2.8 + rank × 1.1` | Analytics risk grid |
-| `cawHotspotScore` | `(district_caw / state_caw) × 100 × n × 0.8` | CAW heatmap |
-| `vulnerabilityScore` | `20 + rand() × 80` | Victim profiling |
-| `yoyChange` | `(current - previous) / previous × 100` | CAW trend insight |
-| `solveRate` | `solvedCases / totalCrimes × 100` | Analytics KPI |
+| Feature              | Formula                                                           | Used In             |
+| -------------------- | ----------------------------------------------------------------- | ------------------- |
+| `crimeRate`          | `totalCrimes / districtCount`                                     | Dashboard KPI       |
+| `hotspotScore`       | `(crimeCount / totalCrimes) × 100 × n × 0.6 + hotspotCount × 1.5` | Hotspot detection   |
+| `riskScore`          | `crimeCount / 25 + hotspotCount × 2.8 + rank × 1.1`               | Analytics risk grid |
+| `cawHotspotScore`    | `(district_caw / state_caw) × 100 × n × 0.8`                      | CAW heatmap         |
+| `vulnerabilityScore` | `20 + rand() × 80`                                                | Victim profiling    |
+| `yoyChange`          | `(current - previous) / previous × 100`                           | CAW trend insight   |
+| `solveRate`          | `solvedCases / totalCrimes × 100`                                 | Analytics KPI       |
 
 ---
 
@@ -173,16 +180,16 @@ The following derived features are computed from raw data:
 
 All records are validated at seed time:
 
-| Field | Rule |
-|---|---|
-| `year` | Must be between 2001 and 2021 |
-| `age` (accused) | Must be between 18 and 57 |
-| `age` (victim) | Must be between 11 and 74 |
-| `latitude` | Must be within Karnataka bounds: 11.5°N – 18.5°N |
-| `longitude` | Must be within Karnataka bounds: 74.0°E – 78.5°E |
-| `severity` | Must be one of: Low, Medium, High, Critical |
-| `status` | Must be one of the defined CrimeStatus enum values |
-| All counts | `Math.max(0, Math.round(...))` — no negatives, no decimals |
+| Field           | Rule                                                       |
+| --------------- | ---------------------------------------------------------- |
+| `year`          | Must be between 2001 and 2021                              |
+| `age` (accused) | Must be between 18 and 57                                  |
+| `age` (victim)  | Must be between 11 and 74                                  |
+| `latitude`      | Must be within Karnataka bounds: 11.5°N – 18.5°N           |
+| `longitude`     | Must be within Karnataka bounds: 74.0°E – 78.5°E           |
+| `severity`      | Must be one of: Low, Medium, High, Critical                |
+| `status`        | Must be one of the defined CrimeStatus enum values         |
+| All counts      | `Math.max(0, Math.round(...))` — no negatives, no decimals |
 
 ---
 
@@ -204,6 +211,7 @@ PostgreSQL enums enforce valid values for `crime_severity`, `crime_status`, `arr
 ## 10. Reproducibility Statement
 
 All data in this platform is **fully reproducible**:
+
 - Fixed RNG seed (`20260702`) ensures identical output on every run.
 - NCRB state totals are hardcoded constants anchored to published figures.
 - Population weights are derived from Census 2011 (public domain).

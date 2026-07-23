@@ -1,9 +1,21 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, Upload, Copy, Download, Check, AlertCircle, 
-  User, MapPin, Calendar, Clipboard, ShieldAlert, Users, Layers, AlertTriangle
+import {
+  FileText,
+  Upload,
+  Copy,
+  Download,
+  Check,
+  AlertCircle,
+  User,
+  MapPin,
+  Calendar,
+  Clipboard,
+  ShieldAlert,
+  Users,
+  Layers,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -54,7 +66,7 @@ export function FirAutoSummaryPage() {
   const validateAndSetFile = (file: File) => {
     const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
     const isTxt = file.type === "text/plain" || file.name.endsWith(".txt");
-    
+
     if (isPdf || isTxt) {
       setFile(file);
       setResult(null);
@@ -109,7 +121,7 @@ export function FirAutoSummaryPage() {
   // Helper to parse FIR text or fallback to high-fidelity template extraction
   const parseFirText = (text: string, filename: string): ExtractedFirData => {
     const lowerText = text.toLowerCase();
-    
+
     // Check if we have structured text upload
     if (text.length > 50) {
       const getField = (regex: RegExp, fallback: string) => {
@@ -118,19 +130,47 @@ export function FirAutoSummaryPage() {
       };
 
       // Simple regex extraction patterns
-      const firNum = getField(/fir\s*(?:no|number)?[:\s\/-]+([a-z0-9\/_-]+)/i, "FIR/" + filename.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() + "/2026");
-      const crimeType = getField(/(?:crime\s*type|offence|under\s*section)[:\s\/-]+([^\n]+)/i, "Theft / Burglary");
-      const dateTime = getField(/(?:date\s*and\s*time|date\s*of\s*occurrence|date)[:\s\/-]+([^\n]+)/i, new Date().toLocaleString());
-      const location = getField(/(?:location|place\s*of\s*occurrence|address)[:\s\/-]+([^\n]+)/i, "Koramangala, Bengaluru Urban");
+      const firNum = getField(
+        /fir\s*(?:no|number)?[:\s\/-]+([a-z0-9\/_-]+)/i,
+        "FIR/" +
+          filename
+            .replace(/[^a-z0-9]/gi, "")
+            .slice(0, 8)
+            .toUpperCase() +
+          "/2026",
+      );
+      const crimeType = getField(
+        /(?:crime\s*type|offence|under\s*section)[:\s\/-]+([^\n]+)/i,
+        "Theft / Burglary",
+      );
+      const dateTime = getField(
+        /(?:date\s*and\s*time|date\s*of\s*occurrence|date)[:\s\/-]+([^\n]+)/i,
+        new Date().toLocaleString(),
+      );
+      const location = getField(
+        /(?:location|place\s*of\s*occurrence|address)[:\s\/-]+([^\n]+)/i,
+        "Koramangala, Bengaluru Urban",
+      );
       const victim = getField(/(?:victim|complainant)[:\s\/-]+([^\n]+)/i, "Suresh Kumar, Age 42");
-      const suspect = getField(/(?:suspect|accused)[:\s\/-]+([^\n]+)/i, "Naveen Gowda (Active repeat offender)");
-      const witness = getField(/(?:witness|witnesses)[:\s\/-]+([^\n]+)/i, "Ramesh Patil (Secured local shopkeeper)");
-      const evidence = getField(/(?:evidence|seizure|recovery)[:\s\/-]+([^\n]+)/i, "CCTV recording of exit routes, broken locking clip");
-      
+      const suspect = getField(
+        /(?:suspect|accused)[:\s\/-]+([^\n]+)/i,
+        "Naveen Gowda (Active repeat offender)",
+      );
+      const witness = getField(
+        /(?:witness|witnesses)[:\s\/-]+([^\n]+)/i,
+        "Ramesh Patil (Secured local shopkeeper)",
+      );
+      const evidence = getField(
+        /(?:evidence|seizure|recovery)[:\s\/-]+([^\n]+)/i,
+        "CCTV recording of exit routes, broken locking clip",
+      );
+
       const missing: string[] = [];
-      if (!lowerText.includes("witness")) missing.push("Witness contact details or formal statement list");
+      if (!lowerText.includes("witness"))
+        missing.push("Witness contact details or formal statement list");
       if (!lowerText.includes("evidence")) missing.push("Ballistic/forensic trace analysis status");
-      if (!lowerText.includes("suspect") && !lowerText.includes("accused")) missing.push("Accused identity details (Aadhaar or phone number)");
+      if (!lowerText.includes("suspect") && !lowerText.includes("accused"))
+        missing.push("Accused identity details (Aadhaar or phone number)");
       if (!lowerText.includes("weapon")) missing.push("Weapon classification disclosures");
 
       return {
@@ -143,7 +183,10 @@ export function FirAutoSummaryPage() {
         witnessDetails: witness,
         evidence,
         summary: `The complainant Suresh Kumar reported a break-in at his premises located in Koramangala, Bengaluru. The incident occurred during late night hours. AI analysis classifies this as Property Crime under Section 379/457 of the IPC. Suspect Naveen Gowda was spotted in the vicinity. CCTV logs and lock fragments were cataloged as evidentiary assets.`,
-        missingInfo: missing.length > 0 ? missing : ["None. All mandatory disclosures are present in the report."],
+        missingInfo:
+          missing.length > 0
+            ? missing
+            : ["None. All mandatory disclosures are present in the report."],
       };
     }
 
@@ -156,8 +199,10 @@ export function FirAutoSummaryPage() {
       victimDetails: "Priya Sharma, Age 29, Software Engineer (Vulnerability score: High)",
       suspectDetails: "Unknown (IP traced to proxy network), Beneficiary: Rajesh M.",
       witnessDetails: "None listed in the primary complaint filing",
-      evidence: "Transaction logs (UPI reference: 662891), email spoofing headers, fake APK file mirror",
-      summary: "Complainant reported receiving a spoofed official email prompting a bank update. Upon clicking, she downloaded a malicious APK file which compromised her system, resulting in an unauthorized transfer of INR 1,50,000 to a beneficiary account held by Rajesh M. Tracing of the IP address indicates the transaction was facilitated via local proxy networks in Bengaluru.",
+      evidence:
+        "Transaction logs (UPI reference: 662891), email spoofing headers, fake APK file mirror",
+      summary:
+        "Complainant reported receiving a spoofed official email prompting a bank update. Upon clicking, she downloaded a malicious APK file which compromised her system, resulting in an unauthorized transfer of INR 1,50,000 to a beneficiary account held by Rajesh M. Tracing of the IP address indicates the transaction was facilitated via local proxy networks in Bengaluru.",
       missingInfo: [
         "Primary device MAC address and operating system specs",
         "Suspect phone numbers linked to the spoofed email registration",
@@ -208,7 +253,7 @@ Missing Information: ${result.missingInfo.join(", ")}
     <div className="space-y-6">
       {/* File Upload Zone */}
       {!result && !isProcessing && (
-        <Card 
+        <Card
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           className="glass border-white/10 p-8 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-white/5"
@@ -218,9 +263,10 @@ Missing Information: ${result.missingInfo.join(", ")}
           </div>
           <h3 className="font-display text-lg font-bold text-foreground">Upload FIR Report</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-sm">
-            Drag and drop your FIR PDF report or TXT file here, or click to browse files from your computer.
+            Drag and drop your FIR PDF report or TXT file here, or click to browse files from your
+            computer.
           </p>
-          
+
           <input
             type="file"
             id="fir-upload"
@@ -253,15 +299,15 @@ Missing Information: ${result.missingInfo.join(", ")}
             <h3 className="font-display text-lg font-bold text-foreground">Analyzing FIR Report</h3>
             <p className="text-xs text-muted-foreground animate-pulse">{steps[progressStep]}</p>
           </div>
-          
+
           {/* Progress Indicators */}
           <div className="flex gap-1.5 justify-center w-full max-w-xs">
             {steps.map((_, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={cn(
-                  "h-1.5 flex-1 rounded-full transition-all duration-300", 
-                  index <= progressStep ? "bg-accent" : "bg-white/10"
+                  "h-1.5 flex-1 rounded-full transition-all duration-300",
+                  index <= progressStep ? "bg-accent" : "bg-white/10",
                 )}
               />
             ))}
@@ -272,10 +318,11 @@ Missing Information: ${result.missingInfo.join(", ")}
       {/* Results View */}
       {result && (
         <div className="space-y-6 animate-fade-in">
-          
           {/* Action Row */}
           <div className="flex justify-between items-center gap-3">
-            <h3 className="font-display text-lg font-bold text-foreground">Extracted Summary: {result.firNumber}</h3>
+            <h3 className="font-display text-lg font-bold text-foreground">
+              Extracted Summary: {result.firNumber}
+            </h3>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleCopy} className="text-xs gap-1.5">
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -285,14 +332,21 @@ Missing Information: ${result.missingInfo.join(", ")}
                 <Download className="h-3.5 w-3.5" />
                 Download Report
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => { setFile(null); setResult(null); }} className="text-xs text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFile(null);
+                  setResult(null);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
                 Upload Another
               </Button>
             </div>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            
             {/* Metadata Fields Grid */}
             <Card className="glass border-white/10 p-5 space-y-4">
               <h4 className="font-display text-sm font-semibold text-foreground border-b border-white/5 pb-2 uppercase tracking-wider text-accent">
@@ -301,21 +355,66 @@ Missing Information: ${result.missingInfo.join(", ")}
 
               <div className="space-y-3 text-sm">
                 {[
-                  { label: "FIR ID", value: result.firNumber, icon: FileText, color: "text-blue-400" },
-                  { label: "Crime Category", value: result.crimeType, icon: ShieldAlert, color: "text-red-400" },
-                  { label: "Occurrence Date", value: result.dateTime, icon: Calendar, color: "text-emerald-400" },
-                  { label: "Location", value: result.location, icon: MapPin, color: "text-amber-400" },
-                  { label: "Complainant Details", value: result.victimDetails, icon: User, color: "text-purple-400" },
-                  { label: "Suspect Profile", value: result.suspectDetails, icon: Users, color: "text-pink-400" },
-                  { label: "Witness Disclosures", value: result.witnessDetails, icon: Clipboard, color: "text-teal-400" },
-                  { label: "Material Evidence", value: result.evidence, icon: Layers, color: "text-indigo-400" },
+                  {
+                    label: "FIR ID",
+                    value: result.firNumber,
+                    icon: FileText,
+                    color: "text-blue-400",
+                  },
+                  {
+                    label: "Crime Category",
+                    value: result.crimeType,
+                    icon: ShieldAlert,
+                    color: "text-red-400",
+                  },
+                  {
+                    label: "Occurrence Date",
+                    value: result.dateTime,
+                    icon: Calendar,
+                    color: "text-emerald-400",
+                  },
+                  {
+                    label: "Location",
+                    value: result.location,
+                    icon: MapPin,
+                    color: "text-amber-400",
+                  },
+                  {
+                    label: "Complainant Details",
+                    value: result.victimDetails,
+                    icon: User,
+                    color: "text-purple-400",
+                  },
+                  {
+                    label: "Suspect Profile",
+                    value: result.suspectDetails,
+                    icon: Users,
+                    color: "text-pink-400",
+                  },
+                  {
+                    label: "Witness Disclosures",
+                    value: result.witnessDetails,
+                    icon: Clipboard,
+                    color: "text-teal-400",
+                  },
+                  {
+                    label: "Material Evidence",
+                    value: result.evidence,
+                    icon: Layers,
+                    color: "text-indigo-400",
+                  },
                 ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="flex gap-3 items-start border-b border-white/3 pb-2.5 last:border-0 last:pb-0">
+                  <div
+                    key={label}
+                    className="flex gap-3 items-start border-b border-white/3 pb-2.5 last:border-0 last:pb-0"
+                  >
                     <div className={cn("p-1.5 rounded-lg bg-white/3 shrink-0", color)}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {label}
+                      </p>
                       <p className="font-medium text-foreground mt-0.5 leading-normal">{value}</p>
                     </div>
                   </div>
@@ -325,15 +424,12 @@ Missing Information: ${result.missingInfo.join(", ")}
 
             {/* AI Summary and Missing Disclosures */}
             <div className="space-y-6">
-              
               {/* Context Summary Card */}
               <Card className="glass border-white/10 p-5 space-y-3">
                 <h4 className="font-display text-sm font-semibold text-foreground border-b border-white/5 pb-2 uppercase tracking-wider text-accent">
                   AI Context Summary
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {result.summary}
-                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{result.summary}</p>
               </Card>
 
               {/* Missing Legal Disclosures Warning */}

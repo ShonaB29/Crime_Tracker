@@ -115,46 +115,46 @@ describe("80/20 train-test split", () => {
 // ── 4. Intent router — general classification ─────────────────────────────────
 
 describe("routeIntent — general classification", () => {
-  it("routes 'how many crimes in Bengaluru' to sql", () => {
-    const { intent } = routeIntent("how many crimes in Bengaluru");
+  it("routes 'how many crimes in Bengaluru' to sql", async () => {
+    const { intent } = await routeIntent("how many crimes in Bengaluru");
     expect(intent).toBe("sql");
   });
 
-  it("routes 'show crime trends' to analysis", () => {
-    const { intent } = routeIntent("show crime trends");
+  it("routes 'show crime trends' to analysis", async () => {
+    const { intent } = await routeIntent("show crime trends");
     expect(intent).toBe("analysis");
   });
 
-  it("routes 'predict next month crimes' to analysis with prediction type", () => {
-    const result = routeIntent("predict next month crimes");
+  it("routes 'predict next month crimes' to analysis with prediction type", async () => {
+    const result = await routeIntent("predict next month crimes");
     expect(result.intent).toBe("analysis");
     expect(result.analysisType).toBe("prediction");
   });
 
-  it("routes 'show hotspot map' to analysis with hotspot type", () => {
-    const result = routeIntent("show hotspot map");
+  it("routes 'show hotspot map' to analysis with hotspot type", async () => {
+    const result = await routeIntent("show hotspot map");
     expect(result.intent).toBe("analysis");
     expect(result.analysisType).toBe("hotspot");
   });
 
-  it("routes 'criminal network relationship' to analysis with network type", () => {
-    const result = routeIntent("criminal network relationship");
+  it("routes 'criminal network relationship' to analysis with network type", async () => {
+    const result = await routeIntent("criminal network relationship");
     expect(result.intent).toBe("analysis");
     expect(result.analysisType).toBe("network");
   });
 
-  it("routes 'case summary report document' to rag", () => {
-    const { intent } = routeIntent("case summary report document");
+  it("routes 'case summary report document' to rag", async () => {
+    const { intent } = await routeIntent("case summary report document");
     expect(intent).toBe("rag");
   });
 
-  it("routes an unrecognised query to general", () => {
-    const { intent } = routeIntent("hello");
+  it("routes an unrecognised query to general", async () => {
+    const { intent } = await routeIntent("hello");
     expect(intent).toBe("general");
   });
 
-  it("normalises query to lowercase", () => {
-    const { normalisedQuery } = routeIntent("Show Crime TRENDS");
+  it("normalises query to lowercase", async () => {
+    const { normalisedQuery } = await routeIntent("Show Crime TRENDS");
     expect(normalisedQuery).toBe("show crime trends");
   });
 });
@@ -162,34 +162,34 @@ describe("routeIntent — general classification", () => {
 // ── 5. CAW keyword priority ───────────────────────────────────────────────────
 
 describe("routeIntent — CAW keyword priority", () => {
-  it("routes 'rape cases in Karnataka' to caw (not sql)", () => {
-    const { intent } = routeIntent("rape cases in Karnataka");
+  it("routes 'rape cases in Karnataka' to caw (not sql)", async () => {
+    const { intent } = await routeIntent("rape cases in Karnataka");
     expect(intent).toBe("caw");
   });
 
-  it("routes 'dowry deaths statistics' to caw", () => {
-    const { intent } = routeIntent("dowry deaths statistics");
+  it("routes 'dowry deaths statistics' to caw", async () => {
+    const { intent } = await routeIntent("dowry deaths statistics");
     expect(intent).toBe("caw");
   });
 
-  it("routes 'domestic violence trend' to caw (not analysis)", () => {
-    const { intent } = routeIntent("domestic violence trend");
+  it("routes 'domestic violence trend' to caw (not analysis)", async () => {
+    const { intent } = await routeIntent("domestic violence trend");
     expect(intent).toBe("caw");
   });
 
-  it("routes 'crimes against women hotspot' to caw (not analysis)", () => {
-    const { intent } = routeIntent("crimes against women hotspot");
+  it("routes 'crimes against women hotspot' to caw (not analysis)", async () => {
+    const { intent } = await routeIntent("crimes against women hotspot");
     expect(intent).toBe("caw");
   });
 
-  it("routes 'how many rape cases' to caw even with sql keywords", () => {
+  it("routes 'how many rape cases' to caw even with sql keywords", async () => {
     // 'how many' is a SQL keyword but 'rape' is CAW — CAW wins
-    const { intent } = routeIntent("how many rape cases in Mysuru");
+    const { intent } = await routeIntent("how many rape cases in Mysuru");
     expect(intent).toBe("caw");
   });
 
-  it("routes 'trafficking report' to caw", () => {
-    const { intent } = routeIntent("trafficking report");
+  it("routes 'trafficking report' to caw", async () => {
+    const { intent } = await routeIntent("trafficking report");
     expect(intent).toBe("caw");
   });
 });
@@ -207,17 +207,23 @@ describe("Data preprocessing helpers", () => {
   it("deterministic RNG produces same sequence for same seed", () => {
     function rng(seed: number) {
       let s = seed >>> 0;
-      return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0xFFFFFFFF; };
+      return () => {
+        s ^= s << 13;
+        s ^= s >> 17;
+        s ^= s << 5;
+        return (s >>> 0) / 0xffffffff;
+      };
     }
-    const r1 = rng(42); const r2 = rng(42);
+    const r1 = rng(42);
+    const r2 = rng(42);
     for (let i = 0; i < 10; i++) expect(r1()).toBeCloseTo(r2(), 10);
   });
 
   it("population-weighted district share sums to ~1.0", () => {
     const weights = [
-      0.025, 0.038, 0.058, 0.022, 0.145, 0.030, 0.018, 0.022, 0.020, 0.026,
-      0.035, 0.035, 0.038, 0.018, 0.030, 0.025, 0.045, 0.010, 0.025, 0.022,
-      0.028, 0.055, 0.032, 0.020, 0.035, 0.040, 0.022, 0.020, 0.038, 0.020, 0.022,
+      0.025, 0.038, 0.058, 0.022, 0.145, 0.03, 0.018, 0.022, 0.02, 0.026, 0.035, 0.035, 0.038,
+      0.018, 0.03, 0.025, 0.045, 0.01, 0.025, 0.022, 0.028, 0.055, 0.032, 0.02, 0.035, 0.04, 0.022,
+      0.02, 0.038, 0.02, 0.022,
     ];
     const total = weights.reduce((s, w) => s + w, 0);
     expect(total).toBeCloseTo(1.0, 1);
@@ -227,10 +233,15 @@ describe("Data preprocessing helpers", () => {
     // Simulates the ±15% noise used in caw-data.ts
     function rng(seed: number) {
       let s = seed >>> 0;
-      return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0xFFFFFFFF; };
+      return () => {
+        s ^= s << 13;
+        s ^= s >> 17;
+        s ^= s << 5;
+        return (s >>> 0) / 0xffffffff;
+      };
     }
     const rand = rng(20260702);
-    const noise = () => 0.85 + rand() * 0.30;
+    const noise = () => 0.85 + rand() * 0.3;
     for (let i = 0; i < 100; i++) {
       const n = noise();
       expect(n).toBeGreaterThanOrEqual(0.85);

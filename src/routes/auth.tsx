@@ -100,9 +100,7 @@ function LoginForm() {
     });
     if (error) {
       toast.error(
-        error.message.includes("Invalid login")
-          ? "Invalid email or password."
-          : error.message,
+        error.message.includes("Invalid login") ? "Invalid email or password." : error.message,
       );
       return;
     }
@@ -114,7 +112,12 @@ function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="login-email">Official email</Label>
-        <Input id="login-email" type="email" placeholder="officer@ksp.gov.in" {...register("email")} />
+        <Input
+          id="login-email"
+          type="email"
+          placeholder="officer@ksp.gov.in"
+          {...register("email")}
+        />
         {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
       </div>
       <div className="space-y-2">
@@ -143,7 +146,11 @@ function LoginForm() {
         {errors.password && <p className="text-xs text-danger">{errors.password.message}</p>}
       </div>
       <Button type="submit" variant="default" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />}
+        {isSubmitting ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Shield className="mr-2 h-4 w-4" />
+        )}
         Sign In
       </Button>
     </form>
@@ -222,7 +229,12 @@ function RegisterForm({ onRegistered }: { onRegistered: () => void }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="reg-email">Official email</Label>
-        <Input id="reg-email" type="email" placeholder="officer@ksp.gov.in" {...register("email")} />
+        <Input
+          id="reg-email"
+          type="email"
+          placeholder="officer@ksp.gov.in"
+          {...register("email")}
+        />
         {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
       </div>
       <div className="grid grid-cols-2 gap-3">
