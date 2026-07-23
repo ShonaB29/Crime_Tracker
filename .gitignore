@@ -14,11 +14,10 @@ dist-ssr
 .vinxi
 .tanstack/**
 .nitro
-# Environment variables & lockfiles
+# Environment variables
 .env
 .env.*
 !.env.example
-package-lock.json
 *.local
 
 # Wrangler / Cloudflare
