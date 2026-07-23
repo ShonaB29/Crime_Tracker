@@ -3,7 +3,7 @@ services:
     name: crimetracker-ai
     runtime: node
     plan: free
-    buildCommand: npm install @rolldown/binding-linux-x64-gnu && npm install && (mkdir -p node_modules/rolldown && cp -f node_modules/@rolldown/binding-linux-x64-gnu/*.node node_modules/rolldown/ 2>/dev/null || true) && npm run build
+    buildCommand: npm install @rolldown/binding-linux-x64-gnu --no-save && npm install && (mkdir -p node_modules/rolldown && cp -f node_modules/@rolldown/binding-linux-x64-gnu/*.node node_modules/rolldown/ 2>/dev/null || true) && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION

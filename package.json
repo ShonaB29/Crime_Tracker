@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "start": "node .output/server/index.mjs",
-    "postinstall": "node -e \"const fs=require('fs'),path=require('path');try{const s=path.join(process.cwd(),'node_modules/@rolldown/binding-linux-x64-gnu/rolldown-binding.linux-x64-gnu.node'),d=path.join(process.cwd(),'node_modules/rolldown/rolldown-binding.linux-x64-gnu.node');if(fs.existsSync(s)){fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(s,d);console.log('Rolldown linux binding linked.');}}catch(e){}\"",
+    "postinstall": "node -e \"const fs=require('fs'),path=require('path');try{const s=path.join(process.cwd(),'node_modules/@rolldown/binding-linux-x64-gnu/rolldown-binding.linux-x64-gnu.node'),d=path.join(process.cwd(),'node_modules/rolldown/rolldown-binding.linux-x64-gnu.node');if(fs.existsSync(s)){fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(s,d);console.log('Rolldown linux binding linked.');}}catch(e){}try{let p='node_modules/nitro/dist/vite.mjs';if(fs.existsSync(p)){let c=fs.readFileSync(p,'utf8');c=c.replace('this.meta.rolldownVersion','this?.meta?.rolldownVersion');fs.writeFileSync(p,c);}}catch(e){}\"",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
