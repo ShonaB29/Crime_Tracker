@@ -1,10 +1,9 @@
 services:
   - type: web
     name: crimetracker-ai
-    runtime: node
+    runtime: docker
     plan: free
-    buildCommand: rm -f package-lock.json && npm install --legacy-peer-deps && npm install --no-save @rollup/rollup-linux-x64-gnu && npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
