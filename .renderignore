@@ -1,0 +1,14 @@
+# Tell Render NOT to ignore the build output
+# .output is in .gitignore but we need it for deployment
+node_modules
+dist-ssr
+.nitro
+.tanstack
+.wrangler
+.vscode
+.idea
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
