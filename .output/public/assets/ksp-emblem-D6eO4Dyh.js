@@ -1,0 +1,1 @@
+var e=`/assets/ksp-emblem-Dg2bKmzS.png`;export{e as t};

@@ -10,7 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-.output
+# .output is committed for deployment (pre-built server bundle)
 .vinxi
 .tanstack/**
 .nitro

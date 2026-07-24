@@ -1,0 +1,1 @@
+import{t as e}from"./AssistantPage-SxrZcs4f.js";var t=e;export{t as component};
