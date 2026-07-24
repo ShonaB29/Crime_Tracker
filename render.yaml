@@ -3,11 +3,13 @@ services:
     name: crimetracker-ai
     runtime: node
     plan: free
-    buildCommand: npm install --legacy-peer-deps && npm run build
+    buildCommand: rm -f package-lock.json && npm install --legacy-peer-deps && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
+      - key: NITRO_PRESET
+        value: node-server
       - key: PORT
         value: 10000
       - key: GEMINI_API_KEY
@@ -15,6 +17,14 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: VITE_SUPABASE_URL
+        value: https://c--f700e729-1083-4f3b-b1cf-54becd62d088-prod.lovable.cloud
+      - key: VITE_SUPABASE_PROJECT_ID
+        value: jhxlidizbymrogwwecxb
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
         sync: false
-      - key: VITE_SUPABASE_ANON_KEY
+      - key: SUPABASE_URL
+        value: https://c--f700e729-1083-4f3b-b1cf-54becd62d088-prod.lovable.cloud
+      - key: SUPABASE_PROJECT_ID
+        value: jhxlidizbymrogwwecxb
+      - key: SUPABASE_PUBLISHABLE_KEY
         sync: false
